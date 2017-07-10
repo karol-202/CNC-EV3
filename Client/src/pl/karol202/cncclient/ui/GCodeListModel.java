@@ -34,4 +34,14 @@ public class GCodeListModel extends AbstractListModel<String>
 	{
 		fireIntervalRemoved(this, position, position);
 	}
+	
+	void fireAllRemoved()
+	{
+		fireIntervalRemoved(this, 0, 0);
+	}
+	
+	void fireAllChanged()
+	{
+		fireContentsChanged(this, 0, getSize() - 1);
+	}
 }

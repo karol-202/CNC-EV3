@@ -1,5 +1,6 @@
 package pl.karol202.cncclient.ui;
 
+import pl.karol202.cncclient.client.ClientManager;
 import pl.karol202.cncclient.client.ConnectionListener;
 import pl.karol202.cncclient.gcode.GCode;
 
@@ -12,7 +13,16 @@ import static javax.swing.JList.VERTICAL;
 
 public class FrameMain extends JFrame implements ConnectionListener
 {
+	private ClientManager client;
 	private GCode gcode;
+	private GCodeLoader gcodeLoader;
+	
+	private JMenuBar menuBar;
+	private JMenu menuFile;
+	private JMenuItem itemNewFile;
+	private JMenuItem itemOpenFile;
+	private JMenuItem itemSaveFile;
+	private JMenuItem itemSaveFileAs;
 	
 	private JPanel panelGCode;
 	private JScrollPane scrollPaneGCode;
@@ -21,12 +31,15 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private JTextField fieldGCode;
 	private JButton buttonGCodeAdd;
 	
-	public FrameMain(GCode gcode)
+	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader)
 	{
 		super("CNC - Client");
+		this.client = client;
 		this.gcode = gcode;
+		this.gcodeLoader = gcodeLoader;
 		
 		setFrameParams();
+		initMenuBar();
 		initGCodePanel();
 	}
 	
@@ -36,6 +49,51 @@ public class FrameMain extends JFrame implements ConnectionListener
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout());
 		setVisible(true);
+	}
+	
+	private void initMenuBar()
+	{
+		menuBar = new JMenuBar();
+		initFileMenu();
+		setJMenuBar(menuBar);
+	}
+	
+	private void initFileMenu()
+	{
+		menuFile = new JMenu("Plik");
+		initNewFileItem();
+		initOpenFileItem();
+		initSaveFileItem();
+		initSaveFileAsItem();
+		menuBar.add(menuFile);
+	}
+	
+	private void initNewFileItem()
+	{
+		itemNewFile = new JMenuItem("Nowy");
+		itemNewFile.addActionListener(e -> newFile());
+		menuFile.add(itemNewFile);
+	}
+	
+	private void initOpenFileItem()
+	{
+		itemOpenFile = new JMenuItem("Otwórz");
+		itemOpenFile.addActionListener(e -> openFile());
+		menuFile.add(itemOpenFile);
+	}
+	
+	private void initSaveFileItem()
+	{
+		itemSaveFile = new JMenuItem("Zapisz");
+		itemSaveFile.addActionListener(e -> saveFile());
+		menuFile.add(itemSaveFile);
+	}
+	
+	private void initSaveFileAsItem()
+	{
+		itemSaveFileAs = new JMenuItem("Zapisz jako");
+		itemSaveFileAs.addActionListener(e -> saveFileAs());
+		menuFile.add(itemSaveFileAs);
 	}
 	
 	private void initGCodePanel()
@@ -88,6 +146,30 @@ public class FrameMain extends JFrame implements ConnectionListener
 		panelGCode.add(buttonGCodeAdd, new GridBagConstraints(1, 1, 1, 1, 0, 0,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 0, 0),
 				0, 0));
+	}
+	
+	private void newFile()
+	{
+		gcodeLoader.newFile();
+		listModelGCode.fireAllRemoved();
+		listGCode.clearSelection();
+	}
+	
+	private void openFile()
+	{
+		gcodeLoader.openFile(this);
+		listModelGCode.fireAllChanged();
+		listGCode.clearSelection();
+	}
+	
+	private void saveFile()
+	{
+		gcodeLoader.saveFile(this);
+	}
+	
+	private void saveFileAs()
+	{
+		gcodeLoader.saveFileAs(this);
 	}
 	
 	private void addGCodeLine()

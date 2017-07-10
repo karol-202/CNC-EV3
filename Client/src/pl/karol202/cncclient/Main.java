@@ -3,6 +3,7 @@ package pl.karol202.cncclient;
 import pl.karol202.cncclient.client.ClientManager;
 import pl.karol202.cncclient.gcode.GCode;
 import pl.karol202.cncclient.ui.FrameMain;
+import pl.karol202.cncclient.ui.GCodeLoader;
 
 import javax.swing.*;
 
@@ -12,11 +13,13 @@ public class Main
 	
 	private ClientManager client;
 	private GCode gcode;
+	private GCodeLoader gcodeLoader;
 	
 	private Main()
 	{
 		client = new ClientManager(frameMain);
 		gcode = new GCode();
+		gcodeLoader = new GCodeLoader(gcode);
 		
 		setLookAndFeel();
 		runMainFrame();
@@ -36,7 +39,7 @@ public class Main
 	
 	private void runMainFrame()
 	{
-		SwingUtilities.invokeLater(() -> frameMain = new FrameMain(gcode));
+		SwingUtilities.invokeLater(() -> frameMain = new FrameMain(client, gcode, gcodeLoader));
 	}
 	
 	public static void main(String[] args)

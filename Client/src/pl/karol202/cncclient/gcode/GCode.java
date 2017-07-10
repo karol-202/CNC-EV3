@@ -1,5 +1,10 @@
 package pl.karol202.cncclient.gcode;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +15,11 @@ public class GCode
 	public GCode()
 	{
 		lines = new ArrayList<>();
+	}
+	
+	public void clear()
+	{
+		lines.clear();
 	}
 	
 	public void addLine(int position, String line)
@@ -50,5 +60,21 @@ public class GCode
 		byte[] byteArray = new byte[bytes.size()];
 		for(int i = 0; i < bytes.size(); i++) byteArray[i] = bytes.get(i);
 		return byteArray;
+	}
+	
+	
+	public void loadFromFile(String pathString) throws IOException
+	{
+		lines.clear();
+		
+		Path path = Paths.get(pathString);
+		Files.lines(path).forEach(lines::add);
+	}
+	
+	public void saveToFile(String path) throws IOException
+	{
+		FileWriter writer = new FileWriter(path);
+		for(String line : lines) writer.write(line + "\r\n");
+		writer.close();
 	}
 }
