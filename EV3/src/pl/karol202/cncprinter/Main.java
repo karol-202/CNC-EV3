@@ -4,7 +4,7 @@ import lejos.hardware.Button;
 import lejos.hardware.Key;
 import lejos.hardware.KeyListener;
 
-public class Main
+class Main
 {
 	private static KeyListener escapeListener = new KeyListener()
 	{
@@ -18,25 +18,31 @@ public class Main
 		public void keyReleased(Key k) {}
 	};
 
-	private static Reader reader;
+	private Machine machine;
+	private CodeExecutor reader;
 	
-	private static void init()
+	private Main()
 	{
 		Button.ESCAPE.addKeyListener(escapeListener);
 		Button.LEDPattern(1);
 		
-		Machine.init();
-		new Server();
+		machine = new Machine();
+		runServer();
 	}
 	
-	public static boolean setReader(byte[] bytes)
+	private void runServer()
+	{
+		new Thread(new Server(this)).start();
+	}
+	
+	boolean setGCode(byte[] bytes)
 	{
 		if(reader != null && reader.isRunning()) return false;
-		reader = new Reader(bytes);
+		reader = new CodeExecutor(bytes);
 		return true;
 	}
 	
-	public static boolean start()
+	boolean start()
 	{
 		if(reader == null || reader.isRunning()) return false;
 		new Thread(reader).start();
@@ -45,6 +51,6 @@ public class Main
 	
 	public static void main(String[] args)
 	{
-		init();
+		new Main();
 	}
 }

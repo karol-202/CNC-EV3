@@ -6,19 +6,28 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
-import lejos.hardware.Sound;
-
-public class Server implements Runnable
+class Server implements Runnable
 {
-	private final String PASSWORD = "ev3cncprinter";
+	private final char[] PASSWORD = "ev3cncprinter".toCharArray();
+	
+	private static final int MESSAGE_OK = 1;
+	private static final int MESSAGE_PASSWORD = 2;
+	private static final int MESSAGE_DISCONNECT = 3;
+	private static final int MESSAGE_GCODE = 4;
+	private static final int MESSAGE_START = 5;
+	private static final int MESSAGE_DENIED = 9;
+	
+	private Main main;
 	private ServerSocket server;
 	private Socket socket;
 	private InputStream is;
 	private OutputStream os;
 	
-	public Server()
+	Server(Main main)
 	{
+		this.main = main;
 		new Thread(this).start();
 	}
 	
@@ -26,53 +35,79 @@ public class Server implements Runnable
 	{
 		try
 		{
-			this.server = new ServerSocket(666);
-			while(true)
-			{
-				System.out.println("Waiting for connection...");
-				Sound.beep();
-				this.socket = this.server.accept();
-				this.is = this.socket.getInputStream();
-				this.os = this.socket.getOutputStream();
-				if (connected()) listen();
-				System.out.println("End of connection");
-			}
+			startServer();
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	
-	private boolean connected() throws IOException
+	private void startServer() throws IOException
+	{
+		server = new ServerSocket(666);
+		runServerLoop();
+	}
+	
+	@SuppressWarnings("InfiniteLoopStatement")
+	private void runServerLoop() throws IOException
+	{
+		while(true)
+		{
+			System.out.println("Waiting for connection...");
+			//Sound.beep();
+			socket = server.accept();
+			is = socket.getInputStream();
+			os = socket.getOutputStream();
+			if(checkClient()) listen();
+			System.out.println("End of connection");
+		}
+	}
+	
+	private boolean checkClient() throws IOException
 	{
 		System.out.println("Connecting...");
-		this.os.write(2);
-		byte[] read = new byte[128];
-		this.is.read(read, 0, 128);
-		if (read[0] != 1) {
-			throw new RuntimeException("Connecting: Invalid password message from client.");
-		}
-		byte len = read[1];
-		char[] chars = new char[len];
-		for (int i = 0; i < len; i++) {
-			chars[i] = ((char)read[(i + 2)]);
-		}
-		String pass = String.copyValueOf(chars, 0, len);
-		if (pass.equals(PASSWORD))
+		sendPasswordRequest();
+		char[] password = getPassword();
+		if(Arrays.equals(password, PASSWORD))
 		{
-			this.os.write(1);
-			System.out.println("Succesfully connected");
+			sendConnectedSuccessfullyMessage();
+			System.out.println("Successfully connected");
 			return true;
 		}
 		else
 		{
-			this.os.write(3);
-			this.socket.close();
+			disconnect();
 			System.out.println("Invalid password");
 			return false;
 		}
+	}
+	
+	private void sendPasswordRequest() throws IOException
+	{
+		os.write(MESSAGE_PASSWORD);
+	}
+	
+	private char[] getPassword() throws IOException
+	{
+		byte[] bytes = new byte[128];
+		int passwordLength = is.read(bytes, 0, 128) - 1;
+		if(bytes[0] != MESSAGE_OK) throw new RuntimeException("Connecting: Invalid password message from client.");
+		char[] password = new char[passwordLength];
+		for (int i = 0; i < passwordLength; i++) password[i] = (char) bytes[i + 1];
+		return password;
+	}
+	
+	private void sendConnectedSuccessfullyMessage() throws IOException
+	{
+		os.write(MESSAGE_OK);
+	}
+	
+	private void disconnect() throws IOException
+	{
+		os.write(MESSAGE_DISCONNECT);
+		socket.close();
 	}
 	
 	private void listen() throws IOException
@@ -80,35 +115,45 @@ public class Server implements Runnable
 		while(true)
 		{
 			System.out.println("Listening...");
-			int read = this.is.read();
-			if (read == -1) return;
-			else if(read == 3)
+			int message = is.read();
+			if(message == -1) return;
+			else if(message == MESSAGE_DISCONNECT)
 			{
 				System.out.println("CLIENT: DISCONNECT");
 				return;
 			}
-			else if (read == 4)
+			else if (message == MESSAGE_GCODE)
 			{
 				System.out.println("CLIENT: GCODE");
-				int len = readInt();
-				byte[] bytes = new byte[len];
-				this.is.read(bytes, 0, len);
-				boolean done = Main.setReader(bytes);
-				this.os.write(done ? 1 : 9);
+				tryToSetGCode();
 			}
-			else if (read == 5)
+			else if (message == MESSAGE_START)
 			{
 				System.out.println("CLIENT: START");
-				boolean done = Main.start();
-				this.os.write(done ? 1 : 9);
+				tryToStartProgram();
 			}
 		}
+	}
+	
+	private void tryToSetGCode() throws IOException
+	{
+		int length = readInt();
+		byte[] bytes = new byte[length];
+		is.read(bytes, 0, length);
+		boolean done = main.setGCode(bytes);
+		os.write(done ? MESSAGE_OK : MESSAGE_DENIED);
+	}
+	
+	private void tryToStartProgram() throws IOException
+	{
+		boolean done = main.start();
+		os.write(done ? MESSAGE_OK : MESSAGE_DENIED);
 	}
 	
 	private int readInt() throws IOException
 	{
 		byte[] bytes = new byte[4];
-		this.is.read(bytes, 0, 4);
+		is.read(bytes, 0, 4);
 		ByteBuffer bb = ByteBuffer.wrap(bytes);
 		return bb.getInt();
 	}

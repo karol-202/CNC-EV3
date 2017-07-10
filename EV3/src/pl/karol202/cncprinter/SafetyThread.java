@@ -2,13 +2,15 @@ package pl.karol202.cncprinter;
 
 import lejos.hardware.sensor.EV3TouchSensor;
 
-public class SafetyThread implements Runnable
+class SafetyThread implements Runnable
 {
+	private Machine machine;
 	private EV3TouchSensor sensor;
 	
-	public SafetyThread(EV3TouchSensor sensor)
+	SafetyThread(Machine machine)
 	{
-		this.sensor = sensor;
+		this.machine = machine;
+		this.sensor = machine.getTouchSensor();
 	}
 	
 	@Override
@@ -16,13 +18,16 @@ public class SafetyThread implements Runnable
 	{
 		while(true)
 		{
-			float[] sample = new float[sensor.sampleSize()];
-			sensor.fetchSample(sample, 0);
-			if(sample[0] != 0)
-			{
-				Machine.stopAll();
-				System.exit(0);
-			}
+			if(getSample() == 0) continue;
+			machine.stopAll();
+			System.exit(0);
 		}
+	}
+	
+	private float getSample()
+	{
+		float[] sample = new float[sensor.sampleSize()];
+		sensor.fetchSample(sample, 0);
+		return sample[0];
 	}
 }

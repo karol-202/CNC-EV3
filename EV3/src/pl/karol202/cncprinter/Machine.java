@@ -8,172 +8,173 @@ import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.robotics.RegulatedMotor;
 
-public class Machine
+class Machine
 {
-	public static final int AXIS_NO_CHANGES = Integer.MIN_VALUE;
+	private static final float X_SCALE = 0.8181F;
+	private static final float Y_SCALE = 1.0F;
+	private static final float Z_SCALE = 180.0F;
 	
-	public static final float X_SCALE = 0.8181F;
-	public static final float Y_SCALE = 1.0F;
-	public static final float Z_SCALE = 180.0F;
+	private static final float Y_MIN_LIMIT = 0.0F / Y_SCALE;
+	private static final float Y_MAX_LIMIT = 340.0F / Y_SCALE;
+	private static final float Z_MIN_LIMIT = 0.0F / Z_SCALE;
+	private static final float Z_MAX_LIMIT = 180.0F / Z_SCALE;
 	
-	public static final float Y_MIN_LIMIT = 0.0F / Y_SCALE;
-	public static final float Z_MIN_LIMIT = 0.0F / Z_SCALE;
-	public static final float Y_MAX_LIMIT = 340.0F / Y_SCALE;
-	public static final float Z_MAX_LIMIT = 180.0F / Z_SCALE;
+	static final float X_MAX_SPEED = 1050.0F / X_SCALE;
+	static final float Y_MAX_SPEED = 1050.0F / Y_SCALE;
+	static final float Z_MAX_SPEED = 1560.0F / Z_SCALE;
 	
-	public static final float X_MAX_SPEED = 1050.0F / X_SCALE;
-	public static final float Y_MAX_SPEED = 1050.0F / Y_SCALE;
-	public static final float Z_MAX_SPEED = 1560.0F / Z_SCALE;
-	
-	private static BaseRegulatedMotor motorA;
-  	private static BaseRegulatedMotor motorB;
-  	private static BaseRegulatedMotor motorC;
-  	private static EV3TouchSensor touch;
-  	private static Thread safetyThread;
+	private BaseRegulatedMotor motorX;
+	private BaseRegulatedMotor motorY;
+  	private BaseRegulatedMotor motorZ;
+  	private EV3TouchSensor touchSensor;
   
-  	public static void init()
-  	{
-  		motorA = new EV3MediumRegulatedMotor(MotorPort.A);
-  		motorB = new EV3LargeRegulatedMotor(MotorPort.B);
-  		motorC = new EV3LargeRegulatedMotor(MotorPort.C);
-  		resetX();
-  		resetY();
-  		resetZ();
-    	touch = new EV3TouchSensor(SensorPort.S1);
-    
-    	safetyThread = new Thread(new SafetyThread(touch));
-    	safetyThread.start();
+  	public Machine()
+    {
+	    this.motorX = new EV3LargeRegulatedMotor(MotorPort.C);
+  		this.motorY = new EV3MediumRegulatedMotor(MotorPort.A);
+  		this.motorZ = new EV3LargeRegulatedMotor(MotorPort.B);
+	    this.touchSensor = new EV3TouchSensor(SensorPort.S1);
+    	
+		runSafetyThread();
+	    resetAll();
   	}
+  	
+  	private void runSafetyThread()
+    {
+	    Thread safetyThread = new Thread(new SafetyThread(this));
+	    safetyThread.start();
+    }
   
- 	public static int getX()
+ 	int getX()
  	{
- 		return (int)(motorC.getTachoCount() / X_SCALE);
+ 		return (int) (motorX.getTachoCount() / X_SCALE);
  	}
   
- 	public static int getY()
+ 	int getY()
  	{
- 		return (int)(motorA.getTachoCount() / Y_SCALE);
+ 		return (int) (motorY.getTachoCount() / Y_SCALE);
  	}
   
- 	public static int getZ()
+ 	int getZ()
  	{
- 		return (int)(motorB.getTachoCount() / Z_SCALE);
+ 		return (int) (motorZ.getTachoCount() / Z_SCALE);
  	}
   
- 	public static void goToX(int pos)
+ 	void goToX(int pos)
  	{
- 		motorC.rotateTo((int)(pos * X_SCALE), true);
+ 		motorX.rotateTo((int) (pos * X_SCALE), true);
  	}
   
- 	public static void goToY(int pos)
+ 	void goToY(int pos)
  	{
- 		if (pos < Y_MIN_LIMIT)
- 			warning("Y value under the limit: " + pos);
- 		else if (pos > Y_MAX_LIMIT)
- 			warning("Y value over the limit: " + pos);
- 		motorA.rotateTo((int)(pos * Y_SCALE), true);
+ 		if(pos < Y_MIN_LIMIT) warning("Y value under the limit: " + pos);
+ 		else if(pos > Y_MAX_LIMIT) warning("Y value over the limit: " + pos);
+ 		motorY.rotateTo((int) (pos * Y_SCALE), true);
  	}
   
- 	public static void goToZ(int pos)
+ 	void goToZ(int pos)
  	{
- 		if (pos < Z_MIN_LIMIT)
- 			warning("Z value under the limit: " + pos);
- 		else if (pos > Z_MAX_LIMIT)
- 			warning("Z value over the limit: " + pos);
- 		motorB.rotateTo((int)(pos * Z_SCALE), true);
+ 		if(pos < Z_MIN_LIMIT) warning("Z value under the limit: " + pos);
+ 		else if(pos > Z_MAX_LIMIT) warning("Z value over the limit: " + pos);
+ 		motorZ.rotateTo((int) (pos * Z_SCALE), true);
  	}
   
- 	public static void goTo(int x, int y, int z)
+ 	void goTo(int x, int y, int z)
  	{
- 		boolean rotX = x != AXIS_NO_CHANGES;
- 		boolean rotY = y != AXIS_NO_CHANGES;
- 		boolean rotZ = z != AXIS_NO_CHANGES;
+ 		boolean rotX = x != getX();
+ 		boolean rotY = y != getY();
+ 		boolean rotZ = z != getZ();
  		
- 		if (y < Y_MIN_LIMIT && rotY)
- 			warning("Y value under the limit: " + y);
- 		else if (y > Y_MAX_LIMIT && rotY)
- 			warning("Y value over the limit: " + y);
+ 		if(y < Y_MIN_LIMIT && rotY) warning("Y value under the limit: " + y);
+ 		else if(y > Y_MAX_LIMIT && rotY) warning("Y value over the limit: " + y);
  		
- 		if (z < Z_MIN_LIMIT && rotZ)
- 			warning("Z value under the limit: " + z);
- 		else if (z > Z_MAX_LIMIT && rotZ)
- 			warning("Z value over the limit: " + z);
+ 		if(z < Z_MIN_LIMIT && rotZ) warning("Z value under the limit: " + z);
+ 		else if(z > Z_MAX_LIMIT && rotZ) warning("Z value over the limit: " + z);
  			
- 		motorC.synchronizeWith(new RegulatedMotor[] { motorA, motorB });
- 		motorC.startSynchronization();
- 		if(rotX) motorC.rotateTo((int)(x * X_SCALE), true);
- 		if(rotY) motorA.rotateTo((int)(y * Y_SCALE), true);
- 		if(rotZ) motorB.rotateTo((int)(z * Z_SCALE), true);
- 		motorC.endSynchronization();
+ 		motorX.synchronizeWith(new RegulatedMotor[] { motorY, motorZ });
+ 		motorX.startSynchronization();
+ 		if(rotX) motorX.rotateTo((int) (x * X_SCALE), true);
+ 		if(rotY) motorY.rotateTo((int) (y * Y_SCALE), true);
+ 		if(rotZ) motorZ.rotateTo((int) (z * Z_SCALE), true);
+ 		motorX.endSynchronization();
  	}
   
- 	public static void resetX()
+ 	private void resetAll()
  	{
- 		motorC.resetTachoCount();
+ 		motorX.resetTachoCount();
+ 		motorY.resetTachoCount();
+ 		motorZ.resetTachoCount();
  	}
  	
- 	public static void resetY()
+ 	void floatAll()
  	{
- 		motorA.resetTachoCount();
+ 		motorX.flt();
+ 		motorY.flt();
+ 		motorZ.flt();
  	}
  	
- 	public static void resetZ()
+ 	void stopAll()
  	{
- 		motorB.resetTachoCount();
+ 		motorX.close();
+ 		motorY.close();
+ 		motorZ.close();
+ 		touchSensor.close();
  	}
  	
- 	public static void floatAll()
+ 	void setXSpeed(float speed)
  	{
- 		motorC.flt();
- 		motorA.flt();
- 		motorB.flt();
- 	}
- 	
- 	public static void stopAll()
- 	{
- 		motorC.close();
- 		motorA.close();
- 		motorB.close();
- 		touch.close();
- 	}
- 	
- 	public static void setSpeedX(float speed)
- 	{
- 		if (speed > X_MAX_SPEED)
- 			warning("X speed over the limit");
- 		motorC.setSpeed(speed * X_SCALE);
+ 		if(speed > X_MAX_SPEED) warning("X speed over the limit");
+ 		motorX.setSpeed(speed * X_SCALE);
  	}
   
- 	public static void setSpeedY(float speed)
+ 	void setYSpeed(float speed)
  	{
- 		if (speed > Y_MAX_SPEED)
- 			warning("Y speed over the limit");
- 		motorA.setSpeed(speed * Y_SCALE);
+ 		if(speed > Y_MAX_SPEED) warning("Y speed over the limit");
+ 		motorY.setSpeed(speed * Y_SCALE);
  	}
   
- 	public static void setSpeedZ(float speed)
+ 	void setZSpeed(float speed)
  	{
- 		if (speed > Z_MAX_SPEED)
- 			warning("Z speed over the limit");
- 		motorB.setSpeed(speed * Z_SCALE);
+ 		if(speed > Z_MAX_SPEED) warning("Z speed over the limit");
+ 		motorZ.setSpeed(speed * Z_SCALE);
+ 	}
+	
+ 	void setXSpeedToMax()
+    {
+    	setXSpeed(X_MAX_SPEED);
+    }
+    
+    void setYSpeedToMax()
+    {
+    	setYSpeed(Y_MAX_SPEED);
+    }
+    
+    void setZSpeedToMax()
+    {
+    	setZSpeed(Z_MAX_SPEED);
+    }
+  
+ 	boolean isMovingX()
+ 	{
+ 		return motorX.isMoving();
  	}
   
- 	public static boolean isMovingX()
+ 	boolean isMovingY()
  	{
- 		return motorC.isMoving();
+ 		return motorY.isMoving();
  	}
   
- 	public static boolean isMovingY()
+ 	boolean isMovingZ()
  	{
- 		return motorA.isMoving();
+ 		return motorZ.isMoving();
  	}
-  
- 	public static boolean isMovingZ()
- 	{
- 		return motorB.isMoving();
- 	}
- 	
- 	private static void warning(String message)
+	
+	EV3TouchSensor getTouchSensor()
+	{
+		return touchSensor;
+	}
+	
+	private void warning(String message)
  	{
  		throw new RuntimeException("Warning: " + message);
  	}
