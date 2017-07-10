@@ -8,16 +8,17 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-class Server implements Runnable
+public class Server implements Runnable
 {
-	private final char[] PASSWORD = "ev3cncprinter".toCharArray();
+	private static final int PORT = 666;
+	private static final char[] PASSWORD = "ev3cncprinter".toCharArray();
 	
-	private static final int MESSAGE_OK = 1;
-	private static final int MESSAGE_PASSWORD = 2;
-	private static final int MESSAGE_DISCONNECT = 3;
-	private static final int MESSAGE_GCODE = 4;
-	private static final int MESSAGE_START = 5;
-	private static final int MESSAGE_DENIED = 9;
+	public static final int MESSAGE_OK = 1;
+	public static final int MESSAGE_PASSWORD = 2;
+	public static final int MESSAGE_DISCONNECT = 3;
+	public static final int MESSAGE_GCODE = 4;
+	public static final int MESSAGE_START = 5;
+	public static final int MESSAGE_DENIED = 9;
 	
 	private Main main;
 	private ServerSocket server;
@@ -46,7 +47,7 @@ class Server implements Runnable
 	
 	private void startServer() throws IOException
 	{
-		server = new ServerSocket(666);
+		server = new ServerSocket(PORT);
 		runServerLoop();
 	}
 	
