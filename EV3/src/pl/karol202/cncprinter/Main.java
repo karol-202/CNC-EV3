@@ -38,7 +38,7 @@ class Main
 	boolean setGCode(byte[] bytes)
 	{
 		if(reader != null && reader.isRunning()) return false;
-		reader = new CodeExecutor(bytes);
+		reader = new CodeExecutor(machine, bytes);
 		return true;
 	}
 	

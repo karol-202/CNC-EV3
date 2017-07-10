@@ -1,6 +1,6 @@
-package pl.karol202.cncclient;
+package pl.karol202.cncclient.client;
 
-interface ConnectionListener
+public interface ConnectionListener
 {
 	void onConnected();
 	

@@ -1,4 +1,4 @@
-package pl.karol202.cncclient;
+package pl.karol202.cncclient.client;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,6 @@ class Client
 	private static final int PORT = 666;
 	private static final byte[] PASSWORD = "ev3cncprinter".getBytes();
 	
-	private String ip;
 	private ConnectionListener listener;
 	
 	private Socket socket;
@@ -26,9 +25,8 @@ class Client
 	private boolean sending;
 	private boolean starting;
 	
-	Client(String ip, ConnectionListener listener)
+	Client(ConnectionListener listener)
 	{
-		this.ip = ip;
 		this.listener = listener;
 	}
 	
@@ -45,6 +43,7 @@ class Client
 		}
 		catch(IOException e)
 		{
+			e.printStackTrace();
 			if(listener != null) listener.onCannotConnect();
 		}
 	}
@@ -200,7 +199,20 @@ class Client
 		starting = false;
 	}
 	
-	void sendGCode(byte[] code) throws IOException
+	void tryToSendGCode(byte[] code)
+	{
+		try
+		{
+			sendGCode(code);
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			if(listener != null) listener.onConnectionProblem();
+		}
+	}
+	
+	private void sendGCode(byte[] code) throws IOException
 	{
 		if(!checkReady()) return;
 		System.out.println("Sending GCode");
@@ -210,7 +222,20 @@ class Client
 		sending = true;
 	}
 	
-	void start() throws IOException
+	void tryToStart()
+	{
+		try
+		{
+			start();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			if(listener != null) listener.onConnectionProblem();
+		}
+	}
+	
+	private void start() throws IOException
 	{
 		if(!checkReady()) return;
 		System.out.println("Starting");
