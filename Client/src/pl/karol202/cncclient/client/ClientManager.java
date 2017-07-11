@@ -11,7 +11,7 @@ public class ClientManager
 	public ClientManager()
 	{
 		client = new Client();
-		executorService = Executors.newSingleThreadExecutor();
+		executorService = Executors.newFixedThreadPool(2);
 	}
 	
 	public void connect(String ip)

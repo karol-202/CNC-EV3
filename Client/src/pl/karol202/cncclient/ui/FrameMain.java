@@ -147,7 +147,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 	
 	private void initGCodeField()
 	{
-		fieldGCode = new JTextField();
+		fieldGCode = new JTextField(20);
 		panelGCode.add(fieldGCode, new GridBagConstraints(0, 1, 1, 1, 1, 0,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 0, 5, 1),
 				0, 0));
@@ -409,6 +409,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 	@Override
 	public void onAuthenticated()
 	{
+		gcode.setUpToDate(false);
 		updateControlPanel();
 	}
 	
@@ -447,6 +448,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 	public void onSent()
 	{
 		gcode.setUpToDate(true);
+		updateControlPanel();
 	}
 	
 	@Override

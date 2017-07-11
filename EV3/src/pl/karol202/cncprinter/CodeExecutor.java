@@ -1,7 +1,6 @@
 package pl.karol202.cncprinter;
 
 import java.util.HashMap;
-import java.util.stream.Stream;
 
 class CodeExecutor implements Runnable
 {
@@ -35,7 +34,7 @@ class CodeExecutor implements Runnable
 	public void run()
 	{
 		running = true;
-		Stream.of(lines).forEach(this::runLine);
+		for(String line : lines) runLine(line);
 		running = false;
 		machine.floatAll();
 	}
@@ -44,7 +43,7 @@ class CodeExecutor implements Runnable
 	{
 		System.out.println(line);
 		String[] words = line.split("\\s+");
-		Stream.of(words).forEach(this::parseWord);
+		for(String word : words) parseWord(word);
 		apply();
 	}
 	
@@ -71,6 +70,7 @@ class CodeExecutor implements Runnable
 	
 	private int getMovementType()
 	{
+		if(!modals.containsKey(Word.MOVEMENT_TYPE)) return -1;
 		float rawMovementType = modals.get(Word.MOVEMENT_TYPE);
 		int movementType = (int) rawMovementType;
 		if(movementType == rawMovementType) return movementType;

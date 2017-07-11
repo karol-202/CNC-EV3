@@ -29,7 +29,6 @@ public class Server implements Runnable
 	Server(Main main)
 	{
 		this.main = main;
-		new Thread(this).start();
 	}
 	
 	public void run()

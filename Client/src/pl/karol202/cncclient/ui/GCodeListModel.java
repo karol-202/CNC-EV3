@@ -4,11 +4,11 @@ import pl.karol202.cncclient.gcode.GCode;
 
 import javax.swing.*;
 
-public class GCodeListModel extends AbstractListModel<String>
+class GCodeListModel extends AbstractListModel<String>
 {
 	private GCode gcode;
 	
-	public GCodeListModel(GCode gcode)
+	GCodeListModel(GCode gcode)
 	{
 		this.gcode = gcode;
 	}

@@ -86,7 +86,7 @@ class Client
 	private void disconnect() throws IOException
 	{
 		os.write(MESSAGE_DISCONNECT);
-		tryToDisconnect();
+		tryToClose();
 	}
 	
 	private void tryToClose()
@@ -134,8 +134,8 @@ class Client
 	private void onAuthenticated()
 	{
 		System.out.println("Authenticated correctly");
-		if(listener != null) listener.onAuthenticated();
 		authenticating = false;
+		if(listener != null) listener.onAuthenticated();
 	}
 	
 	private void onSent()
