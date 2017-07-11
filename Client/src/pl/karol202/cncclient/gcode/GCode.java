@@ -11,30 +11,36 @@ import java.util.List;
 public class GCode
 {
 	private List<String> lines;
+	private boolean upToDate;
 	
 	public GCode()
 	{
 		lines = new ArrayList<>();
+		upToDate = false;
 	}
 	
 	public void clear()
 	{
 		lines.clear();
+		upToDate = true;
 	}
 	
 	public void addLine(int position, String line)
 	{
 		lines.add(position, line);
+		upToDate = true;
 	}
 	
 	public void changeLine(int position, String line)
 	{
 		lines.set(position, line);
+		upToDate = true;
 	}
 	
 	public void removeLine(int position)
 	{
 		lines.remove(position);
+		upToDate = true;
 	}
 	
 	public String getLine(int position)
@@ -62,10 +68,19 @@ public class GCode
 		return byteArray;
 	}
 	
+	public boolean isUpToDate()
+	{
+		return upToDate;
+	}
+	
+	public void setUpToDate(boolean upToDate)
+	{
+		this.upToDate = upToDate;
+	}
 	
 	public void loadFromFile(String pathString) throws IOException
 	{
-		lines.clear();
+		clear();
 		
 		Path path = Paths.get(pathString);
 		Files.lines(path).forEach(lines::add);

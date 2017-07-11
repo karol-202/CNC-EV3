@@ -4,6 +4,8 @@ public interface ConnectionListener
 {
 	void onConnected();
 	
+	void onAuthenticated();
+	
 	void onUnknownHost();
 	
 	void onCannotConnect();

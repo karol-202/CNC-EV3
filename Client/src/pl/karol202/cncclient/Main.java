@@ -17,7 +17,7 @@ public class Main
 	
 	private Main()
 	{
-		client = new ClientManager(frameMain);
+		client = new ClientManager();
 		gcode = new GCode();
 		gcodeLoader = new GCodeLoader(gcode);
 		
@@ -39,7 +39,10 @@ public class Main
 	
 	private void runMainFrame()
 	{
-		SwingUtilities.invokeLater(() -> frameMain = new FrameMain(client, gcode, gcodeLoader));
+		SwingUtilities.invokeLater(() -> {
+			frameMain = new FrameMain(client, gcode, gcodeLoader);
+			client.setConnectionListener(frameMain);
+		});
 	}
 	
 	public static void main(String[] args)

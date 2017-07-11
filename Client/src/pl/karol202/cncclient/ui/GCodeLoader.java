@@ -63,6 +63,7 @@ public class GCodeLoader
 		try
 		{
 			gcode.saveToFile(path);
+			lastPath = path;
 		}
 		catch(IOException e)
 		{

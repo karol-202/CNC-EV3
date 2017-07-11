@@ -8,9 +8,9 @@ public class ClientManager
 	private Client client;
 	private Executor executorService;
 	
-	public ClientManager(ConnectionListener listener)
+	public ClientManager()
 	{
-		client = new Client(listener);
+		client = new Client();
 		executorService = Executors.newSingleThreadExecutor();
 	}
 	
@@ -32,5 +32,20 @@ public class ClientManager
 	public void start()
 	{
 		executorService.execute(() -> client.tryToStart());
+	}
+	
+	public boolean isConnected()
+	{
+		return client.isConnected();
+	}
+	
+	public boolean isAuthenticated()
+	{
+		return client.isAuthenticated();
+	}
+	
+	public void setConnectionListener(ConnectionListener listener)
+	{
+		client.setConnectionListener(listener);
 	}
 }

@@ -3,7 +3,9 @@ package pl.karol202.cncclient.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
@@ -11,6 +13,7 @@ import static pl.karol202.cncprinter.Server.*;
 
 class Client
 {
+	private static final int TIMEOUT = 1000;
 	private static final int PORT = 666;
 	private static final byte[] PASSWORD = "ev3cncprinter".getBytes();
 	
@@ -24,11 +27,6 @@ class Client
 	private boolean authenticating;
 	private boolean sending;
 	private boolean starting;
-	
-	Client(ConnectionListener listener)
-	{
-		this.listener = listener;
-	}
 	
 	void tryToConnect(String ip)
 	{
@@ -51,9 +49,13 @@ class Client
 	private void connect(String ip) throws IOException
 	{
 		System.out.println("Connecting...");
-		socket = new Socket(ip, PORT);
+		SocketAddress address = new InetSocketAddress(ip, PORT);
+		socket = new Socket();
+		socket.connect(address, TIMEOUT);
 		is = socket.getInputStream();
 		os = socket.getOutputStream();
+		
+		if(listener != null) listener.onConnected();
 		System.out.println("Connected successfully");
 		
 		waitingForAuthentication = true;
@@ -132,7 +134,7 @@ class Client
 	private void onAuthenticated()
 	{
 		System.out.println("Authenticated correctly");
-		if(listener != null) listener.onConnected();
+		if(listener != null) listener.onAuthenticated();
 		authenticating = false;
 	}
 	
@@ -243,16 +245,26 @@ class Client
 		starting = true;
 	}
 	
-	private boolean isReady()
-	{
-		return socket.isConnected() && !waitingForAuthentication && !authenticating;
-	}
-	
 	private boolean checkReady()
 	{
-		if(isReady()) return true;
+		if(isAuthenticated()) return true;
 		if(listener != null) listener.onConnectionProblem();
 		return false;
+	}
+	
+	boolean isConnected()
+	{
+		return socket != null && socket.isConnected();
+	}
+	
+	boolean isAuthenticated()
+	{
+		return isConnected() && !waitingForAuthentication && !authenticating;
+	}
+	
+	void setConnectionListener(ConnectionListener listener)
+	{
+		this.listener = listener;
 	}
 	
 	private byte[] intToBytes(int value)
