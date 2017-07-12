@@ -1,6 +1,6 @@
 package pl.karol202.cncclient.ui;
 
-import pl.karol202.cncclient.gcode.GCode;
+import pl.karol202.cncclient.cnc.GCode;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,9 +1,15 @@
 package pl.karol202.cncclient.client;
 
+import pl.karol202.cncprinter.Axis;
+import pl.karol202.cncprinter.ManualControlAction;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
 import static pl.karol202.cncprinter.Server.*;
@@ -39,7 +45,7 @@ class Client
 		catch(IOException e)
 		{
 			e.printStackTrace();
-			if(listener != null) listener.onCannotConnect();
+			if(listener != null && socket == null) listener.onCannotConnect();
 		}
 	}
 	
@@ -110,6 +116,7 @@ class Client
 		while(!socket.isClosed())
 		{
 			int message = is.read();
+			if(message == -1) return;
 			switch(message)
 			{
 			case MESSAGE_OK: onOKMessage(); break;
@@ -241,6 +248,29 @@ class Client
 		System.out.println("Starting");
 		os.write(MESSAGE_START);
 		starting = true;
+	}
+	
+	void tryToManualControl(Axis axis, ManualControlAction action, int speed)
+	{
+		try
+		{
+			manualControl(axis, action, speed);
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			if(listener != null) listener.onConnectionProblem();
+		}
+	}
+	
+	private void manualControl(Axis axis, ManualControlAction action, int speed) throws IOException
+	{
+		if(!checkReady()) return;
+		System.out.println("Manual control: " + axis.name() + " - " + action.name());
+		os.write(MESSAGE_MANUAL);
+		os.write(axis.ordinal());
+		os.write(action.ordinal());
+		os.write(intToBytes(speed));
 	}
 	
 	private boolean checkReady()

@@ -19,6 +19,7 @@ public class Server implements Runnable
 	public static final int MESSAGE_GCODE = 4;
 	public static final int MESSAGE_START = 5;
 	public static final int MESSAGE_DENIED = 9;
+	public static final int MESSAGE_MANUAL = 11;
 	
 	private Main main;
 	private ServerSocket server;
@@ -121,20 +122,24 @@ public class Server implements Runnable
 			System.out.println("Listening...");
 			int message = is.read();
 			if(message == -1) return;
-			else if(message == MESSAGE_DISCONNECT)
+			switch(message)
 			{
+			case MESSAGE_DISCONNECT:
 				System.out.println("CLIENT: DISCONNECT");
 				return;
-			}
-			else if (message == MESSAGE_GCODE)
-			{
+			case MESSAGE_GCODE:
 				System.out.println("CLIENT: GCODE");
 				tryToSetGCode();
-			}
-			else if (message == MESSAGE_START)
-			{
+				break;
+			case MESSAGE_START:
 				System.out.println("CLIENT: START");
 				tryToStartProgram();
+				break;
+			case MESSAGE_MANUAL:
+				System.out.println("CLIENT: MANUAL");
+				tryToManualControl();
+				break;
+			default: System.err.println("Unknown message: " + message);
 			}
 		}
 	}
@@ -152,6 +157,14 @@ public class Server implements Runnable
 	{
 		boolean done = main.start();
 		os.write(done ? MESSAGE_OK : MESSAGE_DENIED);
+	}
+	
+	private void tryToManualControl() throws IOException
+	{
+		Axis axis = Axis.values()[is.read()];
+		ManualControlAction action = ManualControlAction.values()[is.read()];
+		int speed = readInt();
+		main.manualControl(axis, action, speed);
 	}
 	
 	private int readInt() throws IOException

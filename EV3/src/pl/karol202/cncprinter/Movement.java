@@ -70,6 +70,7 @@ class Movement
 		
 		machine.goTo(x, y, z);
 		waitForEndOfMove();
+		machine.stopAll();
 	}
 	
 	private void waitForEndOfMove()

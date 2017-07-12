@@ -34,6 +34,7 @@ class CodeExecutor implements Runnable, MachineListener
 	public void run()
 	{
 		running = true;
+		machine.floatAll();
 		for(String line : lines) runLine(line);
 		running = false;
 		machine.floatAll();

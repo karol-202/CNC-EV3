@@ -1,5 +1,8 @@
 package pl.karol202.cncclient.client;
 
+import pl.karol202.cncprinter.Axis;
+import pl.karol202.cncprinter.ManualControlAction;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -32,6 +35,11 @@ public class ClientManager
 	public void start()
 	{
 		executorService.execute(() -> client.tryToStart());
+	}
+	
+	public void manualControl(Axis axis, ManualControlAction action, int speed)
+	{
+		executorService.execute(() -> client.tryToManualControl(axis, action, speed));
 	}
 	
 	public boolean isConnected()

@@ -19,6 +19,7 @@ class Main
 	};
 
 	private Machine machine;
+	private ManualControl manualControl;
 	private CodeExecutor reader;
 	
 	private Main()
@@ -27,6 +28,7 @@ class Main
 		Button.LEDPattern(1);
 		
 		machine = new Machine();
+		manualControl = new ManualControl(machine);
 		runServer();
 	}
 	
@@ -47,6 +49,13 @@ class Main
 	{
 		if(reader == null || reader.isRunning()) return false;
 		new Thread(reader).start();
+		return true;
+	}
+	
+	boolean manualControl(Axis axis, ManualControlAction action, int speed)
+	{
+		if(reader != null && reader.isRunning()) return false;
+		manualControl.manualControl(axis, action, speed);
 		return true;
 	}
 	

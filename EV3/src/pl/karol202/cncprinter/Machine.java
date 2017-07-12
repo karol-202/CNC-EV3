@@ -10,18 +10,18 @@ import lejos.robotics.RegulatedMotor;
 
 class Machine
 {
-	private static final float X_SCALE = 7.947F;
-	private static final float Y_SCALE = 7.963F;
-	private static final float Z_SCALE = 180.0F;
+	private static final float X_SCALE = 7.947f;
+	private static final float Y_SCALE = 7.963f;
+	private static final float Z_SCALE = 180.0f;
 	
-	private static final float Y_MIN_LIMIT = 0.0F / Y_SCALE;
-	private static final float Y_MAX_LIMIT = 340.0F / Y_SCALE;
-	private static final float Z_MIN_LIMIT = 0.0F / Z_SCALE;
-	private static final float Z_MAX_LIMIT = 180.0F / Z_SCALE;
+	private static final int Y_MIN_LIMIT = 0;
+	private static final int Y_MAX_LIMIT = 340;
+	private static final int Z_MIN_LIMIT = 0;
+	private static final int Z_MAX_LIMIT = 180;
 	
-	static final float X_MAX_SPEED = 1050.0F / X_SCALE;
-	static final float Y_MAX_SPEED = 1050.0F / Y_SCALE;
-	static final float Z_MAX_SPEED = 1560.0F / Z_SCALE;
+	static final float X_MAX_SPEED = 1050f;
+	static final float Y_MAX_SPEED = 1560f;
+	static final float Z_MAX_SPEED = 1050f;
 	
 	private BaseRegulatedMotor motorX;
 	private BaseRegulatedMotor motorY;
@@ -61,15 +61,21 @@ class Machine
  	{
  		return (int) (motorZ.getTachoCount() / Z_SCALE);
  	}
-  
+ 	
  	void goToX(int pos)
  	{
- 		motorX.rotateTo((int) (pos * X_SCALE), true);
+ 		pos *= X_SCALE;
+ 		if(pos == Integer.MIN_VALUE) motorX.backward();
+ 		else if(pos == Integer.MAX_VALUE) motorX.forward();
+ 		else motorX.rotateTo(pos, true);
  	}
   
  	void goToY(int pos)
  	{
- 		pos *= Y_SCALE;
+	    pos *= Y_SCALE;
+	    if(pos == Integer.MIN_VALUE) pos = Y_MIN_LIMIT;
+	    else if(pos == Integer.MAX_VALUE) pos = Y_MAX_LIMIT;
+ 		
  		if(checkYLimit(pos)) return;
  		motorY.rotateTo(pos, true);
  	}
@@ -85,6 +91,8 @@ class Machine
  	void goToZ(int pos)
  	{
  		pos *= Z_SCALE;
+	    if(pos == Integer.MIN_VALUE) pos = Z_MIN_LIMIT;
+	    else if(pos == Integer.MAX_VALUE) pos = Z_MAX_LIMIT;
  		if(checkZLimit(pos)) return;
  		motorZ.rotateTo(pos, true);
  	}
@@ -127,10 +135,25 @@ class Machine
  		motorZ.flt();
  	}
  	
+ 	void floatX()
+    {
+    	motorX.flt(true);
+    }
+    
+    void floatY()
+    {
+    	motorY.flt(true);
+    }
+    
+    void floatZ()
+    {
+    	motorZ.flt(true);
+    }
+ 	
  	void stopAll()
     {
-    	motorX.stop();
-    	motorY.stop();
+	    motorX.stop();
+	    motorY.stop();
 	    motorZ.stop();
     }
  	
@@ -158,8 +181,9 @@ class Machine
   
  	void setYSpeed(float speed)
  	{
+ 		speed *= Y_SCALE;
  		if(checkYSpeedLimit(speed)) return;
- 		motorY.setSpeed(speed * Y_SCALE);
+ 		motorY.setSpeed(speed);
  	}
  	
  	private boolean checkYSpeedLimit(float speed)
@@ -172,8 +196,9 @@ class Machine
   
  	void setZSpeed(float speed)
  	{
- 		if(checkZSpeedLimit(speed)) return;;
- 		motorZ.setSpeed(speed * Z_SCALE);
+ 		speed *= Z_SCALE;
+ 		if(checkZSpeedLimit(speed)) return;
+ 		motorZ.setSpeed(speed);
  	}
  	
  	private boolean checkZSpeedLimit(float speed)
@@ -183,6 +208,24 @@ class Machine
 	    else return false;
 	    return true;
     }
+    
+    void setXSpeedClamp(float speed)
+    {
+	    speed *= X_SCALE;
+    	motorX.setSpeed(Math.min(speed, X_MAX_SPEED));
+    }
+	
+	void setYSpeedClamp(float speed)
+	{
+		speed *= Y_SCALE;
+		motorY.setSpeed(Math.min(speed, Y_MAX_SPEED));
+	}
+	
+	void setZSpeedClamp(float speed)
+	{
+		speed *= Z_SCALE;
+		motorZ.setSpeed(Math.min(speed, Z_MAX_SPEED));
+	}
 	
  	void setXSpeedToMax()
     {

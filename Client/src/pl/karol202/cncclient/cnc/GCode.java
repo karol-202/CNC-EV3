@@ -1,4 +1,4 @@
-package pl.karol202.cncclient.gcode;
+package pl.karol202.cncclient.cnc;
 
 import java.io.FileWriter;
 import java.io.IOException;

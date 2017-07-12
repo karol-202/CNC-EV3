@@ -1,7 +1,8 @@
 package pl.karol202.cncclient;
 
 import pl.karol202.cncclient.client.ClientManager;
-import pl.karol202.cncclient.gcode.GCode;
+import pl.karol202.cncclient.cnc.GCode;
+import pl.karol202.cncclient.cnc.ManualControl;
 import pl.karol202.cncclient.ui.FrameMain;
 import pl.karol202.cncclient.ui.GCodeLoader;
 
@@ -14,12 +15,19 @@ public class Main
 	private ClientManager client;
 	private GCode gcode;
 	private GCodeLoader gcodeLoader;
+	private ManualControl manualControl;
+	
+	private KeyManager keyManager;
 	
 	private Main()
 	{
 		client = new ClientManager();
 		gcode = new GCode();
 		gcodeLoader = new GCodeLoader(gcode);
+		manualControl = new ManualControl(client);
+		
+		keyManager = new KeyManager();
+		keyManager.addKeyListener(manualControl);
 		
 		setLookAndFeel();
 		runMainFrame();

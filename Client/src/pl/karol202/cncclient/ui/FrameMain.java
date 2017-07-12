@@ -2,7 +2,7 @@ package pl.karol202.cncclient.ui;
 
 import pl.karol202.cncclient.client.ClientManager;
 import pl.karol202.cncclient.client.ConnectionListener;
-import pl.karol202.cncclient.gcode.GCode;
+import pl.karol202.cncclient.cnc.GCode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -148,6 +148,13 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private void initGCodeField()
 	{
 		fieldGCode = new JTextField(20);
+		fieldGCode.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e)
+			{
+				addGCodeLine();
+			}
+		});
 		panelGCode.add(fieldGCode, new GridBagConstraints(0, 1, 1, 1, 1, 0,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 0, 5, 1),
 				0, 0));
