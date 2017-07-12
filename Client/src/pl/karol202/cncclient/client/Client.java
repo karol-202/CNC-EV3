@@ -3,10 +3,7 @@ package pl.karol202.cncclient.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.ByteBuffer;
 
 import static pl.karol202.cncprinter.Server.*;
@@ -87,6 +84,7 @@ class Client
 	{
 		os.write(MESSAGE_DISCONNECT);
 		tryToClose();
+		if(listener != null) listener.onDisconnected();
 	}
 	
 	private void tryToClose()
@@ -254,7 +252,7 @@ class Client
 	
 	boolean isConnected()
 	{
-		return socket != null && socket.isConnected();
+		return socket != null && socket.isConnected() && !socket.isClosed();
 	}
 	
 	boolean isAuthenticated()

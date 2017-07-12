@@ -10,8 +10,8 @@ import lejos.robotics.RegulatedMotor;
 
 class Machine
 {
-	private static final float X_SCALE = 0.8181F;
-	private static final float Y_SCALE = 1.0F;
+	private static final float X_SCALE = 7.947F;
+	private static final float Y_SCALE = 7.963F;
 	private static final float Z_SCALE = 180.0F;
 	
 	private static final float Y_MIN_LIMIT = 0.0F / Y_SCALE;
@@ -27,8 +27,10 @@ class Machine
 	private BaseRegulatedMotor motorY;
   	private BaseRegulatedMotor motorZ;
   	private EV3TouchSensor touchSensor;
+  	
+  	private MachineListener listener;
   
-  	public Machine()
+  	Machine()
     {
 	    this.motorX = new EV3LargeRegulatedMotor(MotorPort.C);
   		this.motorY = new EV3MediumRegulatedMotor(MotorPort.A);
@@ -67,17 +69,33 @@ class Machine
   
  	void goToY(int pos)
  	{
- 		if(pos < Y_MIN_LIMIT) warning("Y value under the limit: " + pos);
- 		else if(pos > Y_MAX_LIMIT) warning("Y value over the limit: " + pos);
- 		motorY.rotateTo((int) (pos * Y_SCALE), true);
+ 		pos *= Y_SCALE;
+ 		if(checkYLimit(pos)) return;
+ 		motorY.rotateTo(pos, true);
  	}
+ 	
+ 	private boolean checkYLimit(int pos)
+    {
+	    if(pos < Y_MIN_LIMIT) error("Y value under the limit: " + pos);
+	    else if(pos > Y_MAX_LIMIT) error("Y value over the limit: " + pos);
+	    else return false;
+	    return true;
+    }
   
  	void goToZ(int pos)
  	{
- 		if(pos < Z_MIN_LIMIT) warning("Z value under the limit: " + pos);
- 		else if(pos > Z_MAX_LIMIT) warning("Z value over the limit: " + pos);
- 		motorZ.rotateTo((int) (pos * Z_SCALE), true);
+ 		pos *= Z_SCALE;
+ 		if(checkZLimit(pos)) return;
+ 		motorZ.rotateTo(pos, true);
  	}
+ 	
+ 	private boolean checkZLimit(int pos)
+    {
+	    if(pos < Z_MIN_LIMIT) error("Z value under the limit: " + pos);
+	    else if(pos > Z_MAX_LIMIT) error("Z value over the limit: " + pos);
+	    else return false;
+	    return true;
+    }
   
  	void goTo(int x, int y, int z)
  	{
@@ -85,11 +103,7 @@ class Machine
  		boolean rotY = y != getY();
  		boolean rotZ = z != getZ();
  		
- 		if(y < Y_MIN_LIMIT && rotY) warning("Y value under the limit: " + y);
- 		else if(y > Y_MAX_LIMIT && rotY) warning("Y value over the limit: " + y);
- 		
- 		if(z < Z_MIN_LIMIT && rotZ) warning("Z value under the limit: " + z);
- 		else if(z > Z_MAX_LIMIT && rotZ) warning("Z value over the limit: " + z);
+ 		if((rotY && checkYLimit(y)) || (rotZ && checkZLimit(z))) return;
  			
  		motorX.synchronizeWith(new RegulatedMotor[] { motorY, motorZ });
  		motorX.startSynchronization();
@@ -114,6 +128,13 @@ class Machine
  	}
  	
  	void stopAll()
+    {
+    	motorX.stop();
+    	motorY.stop();
+	    motorZ.stop();
+    }
+ 	
+ 	void closeAll()
  	{
  		motorX.close();
  		motorY.close();
@@ -123,21 +144,45 @@ class Machine
  	
  	void setXSpeed(float speed)
  	{
- 		if(speed > X_MAX_SPEED) warning("X speed over the limit");
+ 		if(checkXSpeedLimit(speed)) return;
  		motorX.setSpeed(speed * X_SCALE);
  	}
+ 	
+ 	private boolean checkXSpeedLimit(float speed)
+    {
+	    if(speed > X_MAX_SPEED) error("X speed over the limit");
+	    else if(speed < 0) error("X speed under the limit");
+	    else return false;
+	    return true;
+    }
   
  	void setYSpeed(float speed)
  	{
- 		if(speed > Y_MAX_SPEED) warning("Y speed over the limit");
+ 		if(checkYSpeedLimit(speed)) return;
  		motorY.setSpeed(speed * Y_SCALE);
  	}
+ 	
+ 	private boolean checkYSpeedLimit(float speed)
+    {
+	    if(speed > Y_MAX_SPEED) error("Y speed over the limit");
+	    else if(speed < 0) error("Y speed under the limit");
+	    else return false;
+	    return true;
+    }
   
  	void setZSpeed(float speed)
  	{
- 		if(speed > Z_MAX_SPEED) warning("Z speed over the limit");
+ 		if(checkZSpeedLimit(speed)) return;;
  		motorZ.setSpeed(speed * Z_SCALE);
  	}
+ 	
+ 	private boolean checkZSpeedLimit(float speed)
+    {
+	    if(speed > Z_MAX_SPEED) error("Z speed over the limit");
+	    else if(speed < 0) error("Z speed under the limit");
+	    else return false;
+	    return true;
+    }
 	
  	void setXSpeedToMax()
     {
@@ -169,13 +214,20 @@ class Machine
  		return motorZ.isMoving();
  	}
 	
+	private void error(String message)
+	{
+		System.err.println("Machine error: " + message);
+		stopAll();
+		if(listener != null) listener.onProblemDetected();
+	}
+	
 	EV3TouchSensor getTouchSensor()
 	{
 		return touchSensor;
 	}
 	
-	private void warning(String message)
- 	{
- 		throw new RuntimeException("Warning: " + message);
- 	}
+	void setMachineListener(MachineListener listener)
+	{
+		this.listener = listener;
+	}
 }

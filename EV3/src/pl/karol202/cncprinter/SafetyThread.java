@@ -19,7 +19,7 @@ class SafetyThread implements Runnable
 		while(true)
 		{
 			if(getSample() == 0) continue;
-			machine.stopAll();
+			machine.closeAll();
 			System.exit(0);
 		}
 	}

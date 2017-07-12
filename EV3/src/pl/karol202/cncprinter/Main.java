@@ -39,6 +39,7 @@ class Main
 	{
 		if(reader != null && reader.isRunning()) return false;
 		reader = new CodeExecutor(machine, bytes);
+		machine.setMachineListener(reader);
 		return true;
 	}
 	

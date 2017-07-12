@@ -352,6 +352,8 @@ public class FrameMain extends JFrame implements ConnectionListener
 		fieldGCode.setText("");
 		listModelGCode.fireLineAdded(position);
 		listGCode.setSelectedIndex(position);
+		
+		updateControlPanel();
 	}
 	
 	private void removeGCodeLine()
@@ -361,6 +363,8 @@ public class FrameMain extends JFrame implements ConnectionListener
 		
 		gcode.removeLine(selection);
 		listModelGCode.fireLineRemoved(selection);
+		
+		updateControlPanel();
 	}
 	
 	private void connect()

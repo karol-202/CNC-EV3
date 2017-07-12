@@ -22,25 +22,25 @@ public class GCode
 	public void clear()
 	{
 		lines.clear();
-		upToDate = true;
+		upToDate = false;
 	}
 	
 	public void addLine(int position, String line)
 	{
 		lines.add(position, line);
-		upToDate = true;
+		upToDate = false;
 	}
 	
 	public void changeLine(int position, String line)
 	{
 		lines.set(position, line);
-		upToDate = true;
+		upToDate = false;
 	}
 	
 	public void removeLine(int position)
 	{
 		lines.remove(position);
-		upToDate = true;
+		upToDate = false;
 	}
 	
 	public String getLine(int position)

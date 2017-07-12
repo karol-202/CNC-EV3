@@ -2,7 +2,7 @@ package pl.karol202.cncprinter;
 
 import java.util.HashMap;
 
-class CodeExecutor implements Runnable
+class CodeExecutor implements Runnable, MachineListener
 {
 	private Machine machine;
 	private boolean running;
@@ -41,6 +41,7 @@ class CodeExecutor implements Runnable
 	
 	private void runLine(String line)
 	{
+		if(!running) return;
 		System.out.println(line);
 		String[] words = line.split("\\s+");
 		for(String word : words) parseWord(word);
@@ -52,11 +53,24 @@ class CodeExecutor implements Runnable
 		char symbol = word.charAt(0);
 		Word wordType = Word.getBySymbol(symbol);
 		String valueString = word.substring(1);
-		float value = Float.parseFloat(valueString);
+		float value = parseFloat(valueString);
 		
 		if(wordType == null) error("Unknown symbol: " + symbol);
-		if(wordType.isModal()) modals.put(wordType, value);
+		else if(wordType.isModal()) modals.put(wordType, value);
 		else notModals.put(wordType, value);
+	}
+	
+	private float parseFloat(String string)
+	{
+		try
+		{
+			return Float.parseFloat(string);
+		}
+		catch(NumberFormatException e)
+		{
+			error("Cannot parse number: " + string);
+			return -1;
+		}
 	}
 	
 	private void apply()
@@ -74,13 +88,23 @@ class CodeExecutor implements Runnable
 		float rawMovementType = modals.get(Word.MOVEMENT_TYPE);
 		int movementType = (int) rawMovementType;
 		if(movementType == rawMovementType) return movementType;
-		else error("Unknown movement type: " + rawMovementType);
-		return -1;
+		else
+		{
+			error("Unknown movement type: " + rawMovementType);
+			return -1;
+		}
+	}
+	
+	@Override
+	public void onProblemDetected()
+	{
+		running = false;
 	}
 	
 	private void error(String message)
 	{
-		throw new RuntimeException("Error at line " + line + ": " + message);
+		System.err.println("Error at line " + line + ": " + message);
+		onProblemDetected();
 	}
 	
 	boolean isRunning()

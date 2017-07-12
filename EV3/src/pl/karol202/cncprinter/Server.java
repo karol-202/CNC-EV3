@@ -93,7 +93,11 @@ public class Server implements Runnable
 	{
 		byte[] bytes = new byte[128];
 		int passwordLength = is.read(bytes, 0, 128) - 1;
-		if(bytes[0] != MESSAGE_OK) throw new RuntimeException("Connecting: Invalid password message from client.");
+		if(bytes[0] != MESSAGE_OK)
+		{
+			System.err.println("Connecting: Invalid password message from client.");
+			return null;
+		}
 		char[] password = new char[passwordLength];
 		for (int i = 0; i < passwordLength; i++) password[i] = (char) bytes[i + 1];
 		return password;
