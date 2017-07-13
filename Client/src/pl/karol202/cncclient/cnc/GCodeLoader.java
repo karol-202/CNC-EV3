@@ -1,6 +1,4 @@
-package pl.karol202.cncclient.ui;
-
-import pl.karol202.cncclient.cnc.GCode;
+package pl.karol202.cncclient.cnc;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,12 +14,12 @@ public class GCodeLoader
 		this.gcode = gcode;
 	}
 	
-	void newFile()
+	public void newFile()
 	{
 		gcode.clear();
 	}
 	
-	void openFile(Component parentForDialog)
+	public void openFile(Component parentForDialog)
 	{
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setDialogTitle("Otwórz plik");
@@ -43,13 +41,13 @@ public class GCodeLoader
 		}
 	}
 	
-	void saveFile(Component parentForDialog)
+	public void saveFile(Component parentForDialog)
 	{
 		if(lastPath != null) saveFileAs(lastPath, parentForDialog);
 		else saveFileAs(parentForDialog);
 	}
 	
-	void saveFileAs(Component parentForDialog)
+	public void saveFileAs(Component parentForDialog)
 	{
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setDialogTitle("Zapisz plik");

@@ -12,7 +12,7 @@ class Machine
 {
 	private static final float X_SCALE = 7.947f;
 	private static final float Y_SCALE = 7.963f;
-	private static final float Z_SCALE = 180.0f;
+	private static final float Z_SCALE = 18.0f;
 	
 	private static final int Y_MIN_LIMIT = 0;
 	private static final int Y_MAX_LIMIT = 340;
@@ -229,17 +229,17 @@ class Machine
 	
  	void setXSpeedToMax()
     {
-    	setXSpeed(X_MAX_SPEED);
+    	setXSpeed(X_MAX_SPEED / X_SCALE);
     }
     
     void setYSpeedToMax()
     {
-    	setYSpeed(Y_MAX_SPEED);
+    	setYSpeed(Y_MAX_SPEED / Y_SCALE);
     }
     
     void setZSpeedToMax()
     {
-    	setZSpeed(Z_MAX_SPEED);
+    	setZSpeed(Z_MAX_SPEED / Z_SCALE);
     }
   
  	boolean isMovingX()

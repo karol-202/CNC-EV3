@@ -4,7 +4,7 @@ import pl.karol202.cncclient.client.ClientManager;
 import pl.karol202.cncclient.cnc.GCode;
 import pl.karol202.cncclient.cnc.ManualControl;
 import pl.karol202.cncclient.ui.FrameMain;
-import pl.karol202.cncclient.ui.GCodeLoader;
+import pl.karol202.cncclient.cnc.GCodeLoader;
 
 import javax.swing.*;
 

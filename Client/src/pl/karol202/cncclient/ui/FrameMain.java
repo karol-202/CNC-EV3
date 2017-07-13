@@ -3,6 +3,8 @@ package pl.karol202.cncclient.ui;
 import pl.karol202.cncclient.client.ClientManager;
 import pl.karol202.cncclient.client.ConnectionListener;
 import pl.karol202.cncclient.cnc.GCode;
+import pl.karol202.cncclient.cnc.GCodeLoader;
+import pl.karol202.cncprinter.Axis;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,6 +45,11 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private JButton buttonPause;
 	private JButton buttonStop;
 	
+	private JPanel panelAxes;
+	private PanelAxis panelX;
+	private PanelAxis panelY;
+	private PanelAxis panelZ;
+	
 	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader)
 	{
 		super("CNC - Client");
@@ -54,8 +61,10 @@ public class FrameMain extends JFrame implements ConnectionListener
 		initMenuBar();
 		initGCodePanel();
 		initControlPanel();
+		initAxesPanel();
 		
 		updateControlPanel();
+		updateAxesPanel();
 	}
 	
 	private void setFrameParams()
@@ -152,6 +161,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 			@Override
 			public void keyReleased(KeyEvent e)
 			{
+				if(e.getKeyCode() != KeyEvent.VK_ENTER) return;
 				addGCodeLine();
 			}
 		});
@@ -258,6 +268,39 @@ public class FrameMain extends JFrame implements ConnectionListener
 				36, 8));
 	}
 	
+	private void initAxesPanel()
+	{
+		panelAxes = new JPanel(new GridBagLayout());
+		initXPanel();
+		initYPanel();
+		initZPanel();
+		add(panelAxes, BorderLayout.EAST);
+	}
+	
+	private void initXPanel()
+	{
+		panelX = new PanelAxis();
+		panelAxes.add(panelX, new GridBagConstraints(0, 0, 1, 1, 1, 1,
+				GridBagConstraints.SOUTH, GridBagConstraints.HORIZONTAL, new Insets(2, 0, 2, 0),
+				0, 0));
+	}
+	
+	private void initYPanel()
+	{
+		panelY = new PanelAxis();
+		panelAxes.add(panelY, new GridBagConstraints(0, 1, 1, 1, 1, 0,
+				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 0, 2, 0),
+				0, 0));
+	}
+	
+	private void initZPanel()
+	{
+		panelZ = new PanelAxis();
+		panelAxes.add(panelZ, new GridBagConstraints(0, 2, 1, 1, 1, 1,
+				GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL, new Insets(2, 0, 2, 0),
+				0, 0));
+	}
+	
 	private void updateControlPanel()
 	{
 		updateConnectionLabel();
@@ -321,6 +364,13 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private void updateStopButton()
 	{
 		buttonStop.setEnabled(client.isAuthenticated());
+	}
+	
+	private void updateAxesPanel()
+	{
+		panelX.updateAxisValue(Axis.X, 0);
+		panelY.updateAxisValue(Axis.Y, 0);
+		panelZ.updateAxisValue(Axis.Z, 0);
 	}
 	
 	private void newFile()
@@ -440,6 +490,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 	public void onAuthenticationFailed()
 	{
 		JOptionPane.showMessageDialog(this, "Nie można połączyć.\nUwierzytelnianie zakończone niepowodzeniem.", "Błąd", JOptionPane.ERROR_MESSAGE);
+		updateControlPanel();
 	}
 	
 	@Override
