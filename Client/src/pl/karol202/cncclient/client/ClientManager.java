@@ -1,5 +1,6 @@
 package pl.karol202.cncclient.client;
 
+import pl.karol202.cncclient.cnc.MachineState;
 import pl.karol202.cncprinter.Axis;
 import pl.karol202.cncprinter.ManualControlAction;
 
@@ -9,37 +10,42 @@ import java.util.concurrent.Executors;
 public class ClientManager
 {
 	private Client client;
-	private Executor executorService;
+	private Executor executor;
 	
 	public ClientManager()
 	{
 		client = new Client();
-		executorService = Executors.newFixedThreadPool(2);
+		executor = Executors.newFixedThreadPool(3);
 	}
 	
 	public void connect(String ip)
 	{
-		executorService.execute(() -> client.tryToConnect(ip));
+		executor.execute(() -> client.tryToConnect(ip));
 	}
 	
 	public void disconnect()
 	{
-		executorService.execute(() -> client.tryToDisconnect());
+		executor.execute(() -> client.tryToDisconnect());
 	}
 	
 	public void sendGCode(byte[] code)
 	{
-		executorService.execute(() -> client.tryToSendGCode(code));
+		executor.execute(() -> client.tryToSendGCode(code));
 	}
 	
 	public void start()
 	{
-		executorService.execute(() -> client.tryToStart());
+		executor.execute(() -> client.tryToStart());
 	}
 	
 	public void manualControl(Axis axis, ManualControlAction action, int speed)
 	{
-		executorService.execute(() -> client.tryToManualControl(axis, action, speed));
+		executor.execute(() -> client.tryToManualControl(axis, action, speed));
+	}
+	
+	public void runStateCheckLoop(MachineState state)
+	{
+		executor.execute(() -> client.tryToRunStateCheckLoop(state));
 	}
 	
 	public boolean isConnected()

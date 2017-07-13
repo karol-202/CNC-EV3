@@ -1,5 +1,6 @@
 package pl.karol202.cncclient.client;
 
+import pl.karol202.cncclient.cnc.MachineState;
 import pl.karol202.cncprinter.Axis;
 import pl.karol202.cncprinter.ManualControlAction;
 
@@ -17,10 +18,12 @@ import static pl.karol202.cncprinter.Server.*;
 class Client
 {
 	private static final int TIMEOUT = 1000;
+	private static final int STATE_CHECK_TIME = 100;
 	private static final int PORT = 666;
 	private static final byte[] PASSWORD = "ev3cncprinter".getBytes();
 	
 	private ConnectionListener listener;
+	private MachineState machineState;
 	
 	private Socket socket;
 	private InputStream is;
@@ -123,6 +126,7 @@ class Client
 			case MESSAGE_PASSWORD: onPasswordRequested(); break;
 			case MESSAGE_DISCONNECT: onDisconnectMessage(); break;
 			case MESSAGE_DENIED: onDeniedMessage(); break;
+			case MESSAGE_STATE: onMachineStateMessage(); break;
 			default: System.err.println("Unknown message: " + message);
 			}
 		}
@@ -206,6 +210,16 @@ class Client
 		starting = false;
 	}
 	
+	private void onMachineStateMessage() throws IOException
+	{
+		machineState.setRunning(is.read() != 0);
+		machineState.setPaused(is.read() != 0);
+		machineState.setX(readFloat());
+		machineState.setY(readFloat());
+		machineState.setZ(readFloat());
+		if(listener != null) listener.onMachineStateUpdated();
+	}
+	
 	void tryToSendGCode(byte[] code)
 	{
 		try
@@ -215,6 +229,7 @@ class Client
 		catch(IOException e)
 		{
 			e.printStackTrace();
+			tryToDisconnect();
 			if(listener != null) listener.onConnectionProblem();
 		}
 	}
@@ -238,6 +253,7 @@ class Client
 		catch(IOException e)
 		{
 			e.printStackTrace();
+			tryToDisconnect();
 			if(listener != null) listener.onConnectionProblem();
 		}
 	}
@@ -259,6 +275,7 @@ class Client
 		catch(IOException e)
 		{
 			e.printStackTrace();
+			tryToDisconnect();
 			if(listener != null) listener.onConnectionProblem();
 		}
 	}
@@ -271,6 +288,41 @@ class Client
 		os.write(axis.ordinal());
 		os.write(action.ordinal());
 		os.write(intToBytes(speed));
+	}
+	
+	void tryToRunStateCheckLoop(MachineState machineState)
+	{
+		try
+		{
+			runStateCheckLoop(machineState);
+		}
+		catch(InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			if(listener != null) listener.onConnectionProblem();
+		}
+	}
+	
+	private void runStateCheckLoop(MachineState machineState) throws IOException, InterruptedException
+	{
+		this.machineState = machineState;
+		Thread.sleep(STATE_CHECK_TIME);
+		while(!socket.isClosed())
+		{
+			checkState();
+			Thread.sleep(STATE_CHECK_TIME);
+		}
+		this.machineState = null;
+	}
+	
+	private void checkState() throws IOException
+	{
+		if(!checkReady()) return;
+		os.write(MESSAGE_STATE);
 	}
 	
 	private boolean checkReady()
@@ -298,5 +350,13 @@ class Client
 	private byte[] intToBytes(int value)
 	{
 		return ByteBuffer.allocate(4).putInt(value).array();
+	}
+	
+	private float readFloat() throws IOException
+	{
+		byte[] bytes = new byte[4];
+		is.read(bytes, 0, 4);
+		ByteBuffer bb = ByteBuffer.wrap(bytes);
+		return bb.getFloat();
 	}
 }

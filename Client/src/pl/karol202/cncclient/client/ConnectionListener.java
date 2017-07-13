@@ -23,4 +23,6 @@ public interface ConnectionListener
 	void onStarted();
 	
 	void onStartingDenied();
+	
+	void onMachineStateUpdated();
 }

@@ -19,6 +19,7 @@ public class Server implements Runnable
 	public static final int MESSAGE_GCODE = 4;
 	public static final int MESSAGE_START = 5;
 	public static final int MESSAGE_DENIED = 9;
+	public static final int MESSAGE_STATE = 10;
 	public static final int MESSAGE_MANUAL = 11;
 	
 	private Main main;
@@ -119,7 +120,6 @@ public class Server implements Runnable
 	{
 		while(true)
 		{
-			System.out.println("Listening...");
 			int message = is.read();
 			if(message == -1) return;
 			switch(message)
@@ -134,6 +134,9 @@ public class Server implements Runnable
 			case MESSAGE_START:
 				System.out.println("CLIENT: START");
 				tryToStartProgram();
+				break;
+			case MESSAGE_STATE:
+				sendMachineState();
 				break;
 			case MESSAGE_MANUAL:
 				System.out.println("CLIENT: MANUAL");
@@ -159,6 +162,16 @@ public class Server implements Runnable
 		os.write(done ? MESSAGE_OK : MESSAGE_DENIED);
 	}
 	
+	private void sendMachineState() throws IOException
+	{
+		os.write(MESSAGE_STATE);
+		os.write(main.isRunning() ? 1 : 0);
+		os.write(main.isPaused() ? 1 : 0);
+		os.write(floatToBytes(main.getX()));
+		os.write(floatToBytes(main.getY()));
+		os.write(floatToBytes(main.getZ()));
+	}
+	
 	private void tryToManualControl() throws IOException
 	{
 		Axis axis = Axis.values()[is.read()];
@@ -173,5 +186,10 @@ public class Server implements Runnable
 		is.read(bytes, 0, 4);
 		ByteBuffer bb = ByteBuffer.wrap(bytes);
 		return bb.getInt();
+	}
+	
+	private byte[] floatToBytes(float value)
+	{
+		return ByteBuffer.allocate(4).putFloat(value).array();
 	}
 }

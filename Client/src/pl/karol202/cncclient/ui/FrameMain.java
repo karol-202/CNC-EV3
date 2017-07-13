@@ -4,6 +4,8 @@ import pl.karol202.cncclient.client.ClientManager;
 import pl.karol202.cncclient.client.ConnectionListener;
 import pl.karol202.cncclient.cnc.GCode;
 import pl.karol202.cncclient.cnc.GCodeLoader;
+import pl.karol202.cncclient.cnc.MachineState;
+import pl.karol202.cncclient.cnc.ManualControl;
 import pl.karol202.cncprinter.Axis;
 
 import javax.swing.*;
@@ -14,12 +16,15 @@ import java.awt.event.KeyEvent;
 import java.util.stream.Stream;
 
 import static javax.swing.JList.VERTICAL;
+import static pl.karol202.cncprinter.ManualControlAction.*;
 
 public class FrameMain extends JFrame implements ConnectionListener
 {
 	private ClientManager client;
 	private GCode gcode;
 	private GCodeLoader gcodeLoader;
+	private ManualControl manualControl;
+	private MachineState machineState;
 	
 	private JMenuBar menuBar;
 	private JMenu menuFile;
@@ -50,12 +55,14 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private PanelAxis panelY;
 	private PanelAxis panelZ;
 	
-	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader)
+	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader, ManualControl manualControl, MachineState machineState)
 	{
 		super("CNC - Client");
 		this.client = client;
 		this.gcode = gcode;
 		this.gcodeLoader = gcodeLoader;
+		this.manualControl = manualControl;
+		this.machineState = machineState;
 		
 		setFrameParams();
 		initMenuBar();
@@ -280,6 +287,11 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private void initXPanel()
 	{
 		panelX = new PanelAxis();
+		panelX.setZeroButtonListener(() -> manualControl.control(Axis.X, ZERO));
+		panelX.setLeftButtonPressListener(() -> manualControl.control(Axis.X, MOVE_LEFT));
+		panelX.setLeftButtonReleaseListener(() -> manualControl.control(Axis.X, STOP));
+		panelX.setRightButtonPressListener(() -> manualControl.control(Axis.X, MOVE_RIGHT));
+		panelX.setRightButtonReleaseListener(() -> manualControl.control(Axis.X, STOP));
 		panelAxes.add(panelX, new GridBagConstraints(0, 0, 1, 1, 1, 1,
 				GridBagConstraints.SOUTH, GridBagConstraints.HORIZONTAL, new Insets(2, 0, 2, 0),
 				0, 0));
@@ -288,6 +300,11 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private void initYPanel()
 	{
 		panelY = new PanelAxis();
+		panelY.setZeroButtonListener(() -> manualControl.control(Axis.Y, ZERO));
+		panelY.setLeftButtonPressListener(() -> manualControl.control(Axis.Y, MOVE_LEFT));
+		panelY.setLeftButtonReleaseListener(() -> manualControl.control(Axis.Y, STOP));
+		panelY.setRightButtonPressListener(() -> manualControl.control(Axis.Y, MOVE_RIGHT));
+		panelY.setRightButtonReleaseListener(() -> manualControl.control(Axis.Y, STOP));
 		panelAxes.add(panelY, new GridBagConstraints(0, 1, 1, 1, 1, 0,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 0, 2, 0),
 				0, 0));
@@ -296,6 +313,11 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private void initZPanel()
 	{
 		panelZ = new PanelAxis();
+		panelZ.setZeroButtonListener(() -> manualControl.control(Axis.Z, ZERO));
+		panelZ.setLeftButtonPressListener(() -> manualControl.control(Axis.Z, MOVE_LEFT));
+		panelZ.setLeftButtonReleaseListener(() -> manualControl.control(Axis.Z, STOP));
+		panelZ.setRightButtonPressListener(() -> manualControl.control(Axis.Z, MOVE_RIGHT));
+		panelZ.setRightButtonReleaseListener(() -> manualControl.control(Axis.Z, STOP));
 		panelAxes.add(panelZ, new GridBagConstraints(0, 2, 1, 1, 1, 1,
 				GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL, new Insets(2, 0, 2, 0),
 				0, 0));
@@ -348,7 +370,10 @@ public class FrameMain extends JFrame implements ConnectionListener
 	
 	private void updateWorkStatusLabel()
 	{
-		
+		labelWorkStatus.setVisible(client.isAuthenticated());
+		if(machineState.isRunning() && !machineState.isPaused()) labelWorkStatus.setText("Wykonywanie");
+		else if(machineState.isRunning() && machineState.isPaused()) labelWorkStatus.setText("Pauza");
+		else labelWorkStatus.setText("Bezczynność");
 	}
 	
 	private void updateStartButton()
@@ -368,9 +393,9 @@ public class FrameMain extends JFrame implements ConnectionListener
 	
 	private void updateAxesPanel()
 	{
-		panelX.updateAxisValue(Axis.X, 0);
-		panelY.updateAxisValue(Axis.Y, 0);
-		panelZ.updateAxisValue(Axis.Z, 0);
+		panelX.updateAxisValue(Axis.X, machineState.getX());
+		panelY.updateAxisValue(Axis.Y, machineState.getY());
+		panelZ.updateAxisValue(Axis.Z, machineState.getZ());
 	}
 	
 	private void newFile()
@@ -385,6 +410,8 @@ public class FrameMain extends JFrame implements ConnectionListener
 		gcodeLoader.openFile(this);
 		listModelGCode.fireAllChanged();
 		listGCode.clearSelection();
+		
+		updateControlPanel();
 	}
 	
 	private void saveFile()
@@ -429,7 +456,9 @@ public class FrameMain extends JFrame implements ConnectionListener
 		if(client.isConnected()) return;
 		String ip = JOptionPane.showInputDialog(this, "Podaj numer IP plotera:", "Połączenie",
 				JOptionPane.PLAIN_MESSAGE);
-		if(ip != null && !ip.isEmpty()) client.connect(ip);
+		if(ip == null || ip.isEmpty()) return;
+		client.connect(ip);
+		client.runStateCheckLoop(machineState);
 	}
 	
 	private void disconnect()
@@ -529,5 +558,12 @@ public class FrameMain extends JFrame implements ConnectionListener
 	public void onStartingDenied()
 	{
 		JOptionPane.showMessageDialog(this, "Urządzenie odmówiło rozpoczęcia programu", "Błąd", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	@Override
+	public void onMachineStateUpdated()
+	{
+		updateWorkStatusLabel();
+		updateAxesPanel();
 	}
 }

@@ -19,9 +19,9 @@ class Machine
 	private static final int Z_MIN_LIMIT = 0;
 	private static final int Z_MAX_LIMIT = 180;
 	
-	static final float X_MAX_SPEED = 1050f;
-	static final float Y_MAX_SPEED = 1560f;
-	static final float Z_MAX_SPEED = 1050f;
+	static final float X_MAX_SPEED = 1000f;
+	static final float Y_MAX_SPEED = 1000f;
+	static final float Z_MAX_SPEED = 1000f;
 	
 	private BaseRegulatedMotor motorX;
 	private BaseRegulatedMotor motorY;
@@ -47,40 +47,40 @@ class Machine
 	    safetyThread.start();
     }
   
- 	int getX()
+ 	float getX()
  	{
- 		return (int) (motorX.getTachoCount() / X_SCALE);
+ 		return motorX.getTachoCount() / X_SCALE;
  	}
   
- 	int getY()
+ 	float getY()
  	{
- 		return (int) (motorY.getTachoCount() / Y_SCALE);
+ 		return motorY.getTachoCount() / Y_SCALE;
  	}
   
- 	int getZ()
+ 	float getZ()
  	{
- 		return (int) (motorZ.getTachoCount() / Z_SCALE);
+ 		return motorZ.getTachoCount() / Z_SCALE;
  	}
  	
- 	void goToX(int pos)
+ 	void goToX(float pos)
  	{
  		pos *= X_SCALE;
- 		if(pos == Integer.MIN_VALUE) motorX.backward();
- 		else if(pos == Integer.MAX_VALUE) motorX.forward();
- 		else motorX.rotateTo(pos, true);
+ 		if(pos == Float.NEGATIVE_INFINITY) motorX.backward();
+ 		else if(pos == Float.POSITIVE_INFINITY) motorX.forward();
+ 		else motorX.rotateTo((int) pos, true);
  	}
   
- 	void goToY(int pos)
+ 	void goToY(float pos)
  	{
 	    pos *= Y_SCALE;
-	    if(pos == Integer.MIN_VALUE) pos = Y_MIN_LIMIT;
-	    else if(pos == Integer.MAX_VALUE) pos = Y_MAX_LIMIT;
+	    if(pos == Float.NEGATIVE_INFINITY) pos = Y_MIN_LIMIT;
+	    else if(pos == Float.POSITIVE_INFINITY) pos = Y_MAX_LIMIT;
  		
  		if(checkYLimit(pos)) return;
- 		motorY.rotateTo(pos, true);
+ 		motorY.rotateTo((int) pos, true);
  	}
  	
- 	private boolean checkYLimit(int pos)
+ 	private boolean checkYLimit(float pos)
     {
 	    if(pos < Y_MIN_LIMIT) error("Y value under the limit: " + pos);
 	    else if(pos > Y_MAX_LIMIT) error("Y value over the limit: " + pos);
@@ -88,16 +88,16 @@ class Machine
 	    return true;
     }
   
- 	void goToZ(int pos)
+ 	void goToZ(float pos)
  	{
  		pos *= Z_SCALE;
-	    if(pos == Integer.MIN_VALUE) pos = Z_MIN_LIMIT;
-	    else if(pos == Integer.MAX_VALUE) pos = Z_MAX_LIMIT;
+	    if(pos == Float.NEGATIVE_INFINITY) pos = Z_MIN_LIMIT;
+	    else if(pos == Float.POSITIVE_INFINITY) pos = Z_MAX_LIMIT;
  		if(checkZLimit(pos)) return;
- 		motorZ.rotateTo(pos, true);
+ 		motorZ.rotateTo((int) pos, true);
  	}
  	
- 	private boolean checkZLimit(int pos)
+ 	private boolean checkZLimit(float pos)
     {
 	    if(pos < Z_MIN_LIMIT) error("Z value under the limit: " + pos);
 	    else if(pos > Z_MAX_LIMIT) error("Z value over the limit: " + pos);
@@ -105,19 +105,22 @@ class Machine
 	    return true;
     }
   
- 	void goTo(int x, int y, int z)
+ 	void goTo(float x, float y, float z)
  	{
  		boolean rotX = x != getX();
  		boolean rotY = y != getY();
  		boolean rotZ = z != getZ();
- 		
+	   
+	    x *= X_SCALE;
+	    y *= Y_SCALE;
+	    z *= Z_SCALE;
  		if((rotY && checkYLimit(y)) || (rotZ && checkZLimit(z))) return;
  			
  		motorX.synchronizeWith(new RegulatedMotor[] { motorY, motorZ });
  		motorX.startSynchronization();
- 		if(rotX) motorX.rotateTo((int) (x * X_SCALE), true);
- 		if(rotY) motorY.rotateTo((int) (y * Y_SCALE), true);
- 		if(rotZ) motorZ.rotateTo((int) (z * Z_SCALE), true);
+ 		if(rotX) motorX.rotateTo((int) x, true);
+ 		if(rotY) motorY.rotateTo((int) y, true);
+ 		if(rotZ) motorZ.rotateTo((int) z, true);
  		motorX.endSynchronization();
  	}
   
@@ -137,17 +140,17 @@ class Machine
  	
  	void floatX()
     {
-    	motorX.flt(true);
+    	motorX.flt();
     }
     
     void floatY()
     {
-    	motorY.flt(true);
+    	motorY.flt();
     }
     
     void floatZ()
     {
-    	motorZ.flt(true);
+    	motorZ.flt();
     }
  	
  	void stopAll()
@@ -165,10 +168,26 @@ class Machine
  		touchSensor.close();
  	}
  	
+ 	void zeroX()
+    {
+    	motorX.resetTachoCount();
+    }
+    
+    void zeroY()
+    {
+    	motorY.resetTachoCount();
+    }
+    
+    void zeroZ()
+    {
+  		motorZ.resetTachoCount();
+    }
+ 	
  	void setXSpeed(float speed)
  	{
+	    speed *= X_SCALE;
  		if(checkXSpeedLimit(speed)) return;
- 		motorX.setSpeed(speed * X_SCALE);
+ 		motorX.setSpeed(speed);
  	}
  	
  	private boolean checkXSpeedLimit(float speed)

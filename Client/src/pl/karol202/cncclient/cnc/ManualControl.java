@@ -9,6 +9,10 @@ import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import static pl.karol202.cncprinter.ManualControlAction.MOVE_LEFT;
+import static pl.karol202.cncprinter.ManualControlAction.MOVE_RIGHT;
+import static pl.karol202.cncprinter.ManualControlAction.STOP;
+
 public class ManualControl implements KeyListener
 {
 	private ClientManager client;
@@ -31,32 +35,36 @@ public class ManualControl implements KeyListener
 	@Override
 	public void keyPressed(KeyEvent e)
 	{
-		if(!client.isAuthenticated()) return;
-		if(e.getKeyCode() == KeyEvent.VK_LEFT) control(Axis.X, ManualControlAction.MOVE_LEFT);
-		else if(e.getKeyCode() == KeyEvent.VK_RIGHT) control(Axis.X, ManualControlAction.MOVE_RIGHT);
-		else if(e.getKeyCode() == KeyEvent.VK_DOWN) control(Axis.Y, ManualControlAction.MOVE_LEFT);
-		else if(e.getKeyCode() == KeyEvent.VK_UP) control(Axis.Y, ManualControlAction.MOVE_RIGHT);
-		else if(e.getKeyCode() == KeyEvent.VK_PAGE_DOWN) control(Axis.Z, ManualControlAction.MOVE_LEFT);
-		else if(e.getKeyCode() == KeyEvent.VK_PAGE_UP) control(Axis.Z, ManualControlAction.MOVE_RIGHT);
+		if(e.getKeyCode() == KeyEvent.VK_LEFT) control(Axis.X, MOVE_LEFT);
+		else if(e.getKeyCode() == KeyEvent.VK_RIGHT) control(Axis.X, MOVE_RIGHT);
+		else if(e.getKeyCode() == KeyEvent.VK_DOWN) control(Axis.Y, MOVE_LEFT);
+		else if(e.getKeyCode() == KeyEvent.VK_UP) control(Axis.Y, MOVE_RIGHT);
+		else if(e.getKeyCode() == KeyEvent.VK_PAGE_DOWN) control(Axis.Z, MOVE_LEFT);
+		else if(e.getKeyCode() == KeyEvent.VK_PAGE_UP) control(Axis.Z, MOVE_RIGHT);
 	}
 	
 	@Override
 	public void keyReleased(KeyEvent e)
 	{
-		if(!client.isAuthenticated()) return;
-		if(e.getKeyCode() == KeyEvent.VK_LEFT) control(Axis.X, ManualControlAction.STOP);
-		else if(e.getKeyCode() == KeyEvent.VK_RIGHT) control(Axis.X, ManualControlAction.STOP);
-		else if(e.getKeyCode() == KeyEvent.VK_DOWN) control(Axis.Y, ManualControlAction.STOP);
-		else if(e.getKeyCode() == KeyEvent.VK_UP) control(Axis.Y, ManualControlAction.STOP);
-		else if(e.getKeyCode() == KeyEvent.VK_PAGE_DOWN) control(Axis.Z, ManualControlAction.STOP);
-		else if(e.getKeyCode() == KeyEvent.VK_PAGE_UP) control(Axis.Z, ManualControlAction.STOP);
+		if(e.getKeyCode() == KeyEvent.VK_LEFT) control(Axis.X, STOP);
+		else if(e.getKeyCode() == KeyEvent.VK_RIGHT) control(Axis.X, STOP);
+		else if(e.getKeyCode() == KeyEvent.VK_DOWN) control(Axis.Y, STOP);
+		else if(e.getKeyCode() == KeyEvent.VK_UP) control(Axis.Y, STOP);
+		else if(e.getKeyCode() == KeyEvent.VK_PAGE_DOWN) control(Axis.Z, STOP);
+		else if(e.getKeyCode() == KeyEvent.VK_PAGE_UP) control(Axis.Z, STOP);
 	}
 	
-	private void control(Axis axis, ManualControlAction action)
+	public void control(Axis axis, ManualControlAction action)
 	{
-		if(action != ManualControlAction.STOP && axesMoving.get(axis)) return;
+		if(!client.isAuthenticated()) return;
+		if(isMoveAction(action) && axesMoving.get(axis)) return;
 		client.manualControl(axis, action, speed);
-		axesMoving.put(axis, action != ManualControlAction.STOP);
+		axesMoving.put(axis, isMoveAction(action));
+	}
+	
+	private boolean isMoveAction(ManualControlAction action)
+	{
+		return action == MOVE_LEFT || action == MOVE_RIGHT;
 	}
 	
 	public void setSpeed(int speed)

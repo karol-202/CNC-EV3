@@ -1,0 +1,44 @@
+Protokół komunikacji EV3<-->PC
+Port: 666
+EV3 - serwer
+PC - klient
+
+Łączenie:
+1. EV3->PC 02                 //Prośba o hasło
+2. PC->EV3 01 + HASŁO         //Wysłanie hasła
+3. EV3->PC 01                 //Hasło poprawne
+       lub 03 + [Rozłączenie] //Hasło nieprawidłowe
+
+Rozłączanie:
+1. PC->EV3 03 //Rozłączam
+
+Przesyłanie programu:
+1. PC->EV3 04 + DŁUGOŚĆ + KOD //Przesłanie programu
+2. EV3->PC 01                 //Potwierdzenie
+
+Sterowanie ręczne:
+1. PC->EV3 11 + OS(0-X, 1-Y, 2-Z) + DZIALANIE(0-STOP, 1-Ruch-, 2-Ruch+, 3-Zerowanie) + MM/S(int)
+
+Stan maszyny:
+1. PC->EV3 10
+2. EV3->PC 10 + STAN MASZYNY
+
+ID | Do serwera            | Do klienta
+01 | OK                    | OK
+02 | -                     | Prośba o hasło
+03 | Rozłączenie           | Rozłączenie
+04 | Przesłanie G-Code     | -
+05 | Start programu        | -
+06 | Stop programu         | -
+07 | Pauza programu        | -
+08 | Wznowienie programu   | -
+09 | -                     | Odmowa
+10 | Żadanie stanu maszyny | Stan maszyny
+11 | Sterowanie ręczne     | -
+
+STAN MASZYNY:
+1. Wykonywanie programu (boolean)
+2. Wstrzymanie programu (boolean)
+3. Oś X (float)
+4. Oś Y (float)
+5. Oś Z (float)

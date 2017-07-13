@@ -20,9 +20,9 @@ class Movement
 		machine.setXSpeedToMax();
 		machine.setYSpeedToMax();
 		machine.setZSpeedToMax();
-		if(notModals.containsKey(Word.AXIS_X)) machine.goToX(notModals.get(Word.AXIS_X).intValue());
-		if(notModals.containsKey(Word.AXIS_Y)) machine.goToY(notModals.get(Word.AXIS_Y).intValue());
-		if(notModals.containsKey(Word.AXIS_Z)) machine.goToZ(notModals.get(Word.AXIS_Z).intValue());
+		if(notModals.containsKey(Word.AXIS_X)) machine.goToX(notModals.get(Word.AXIS_X));
+		if(notModals.containsKey(Word.AXIS_Y)) machine.goToY(notModals.get(Word.AXIS_Y));
+		if(notModals.containsKey(Word.AXIS_Z)) machine.goToZ(notModals.get(Word.AXIS_Z));
 		waitForEndOfMove();
 	}
 	
@@ -30,12 +30,12 @@ class Movement
 	{
 		float speed = modals.get(Word.SPEED);
 		
-		int x = notModals.containsKey(Word.AXIS_X) ? notModals.get(Word.AXIS_X).intValue() : machine.getX();
-		int y = notModals.containsKey(Word.AXIS_Y) ? notModals.get(Word.AXIS_Y).intValue() : machine.getY();
-		int z = notModals.containsKey(Word.AXIS_Z) ? notModals.get(Word.AXIS_Z).intValue() : machine.getZ();
-		int xDist = Math.abs(x - machine.getX());
-		int yDist = Math.abs(y - machine.getY());
-		int zDist = Math.abs(z - machine.getZ());
+		float x = notModals.containsKey(Word.AXIS_X) ? notModals.get(Word.AXIS_X) : machine.getX();
+		float y = notModals.containsKey(Word.AXIS_Y) ? notModals.get(Word.AXIS_Y) : machine.getY();
+		float z = notModals.containsKey(Word.AXIS_Z) ? notModals.get(Word.AXIS_Z) : machine.getZ();
+		float xDist = Math.abs(x - machine.getX());
+		float yDist = Math.abs(y - machine.getY());
+		float zDist = Math.abs(z - machine.getZ());
 		
 		float max = Math.max(xDist, Math.max(yDist, zDist));
 		float time = max / speed;

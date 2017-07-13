@@ -39,7 +39,7 @@ class Main
 	
 	boolean setGCode(byte[] bytes)
 	{
-		if(reader != null && reader.isRunning()) return false;
+		if(isRunning()) return false;
 		reader = new CodeExecutor(machine, bytes);
 		machine.setMachineListener(reader);
 		return true;
@@ -54,9 +54,34 @@ class Main
 	
 	boolean manualControl(Axis axis, ManualControlAction action, int speed)
 	{
-		if(reader != null && reader.isRunning()) return false;
+		if(isRunning()) return false;
 		manualControl.manualControl(axis, action, speed);
 		return true;
+	}
+	
+	boolean isRunning()
+	{
+		return reader != null && reader.isRunning();
+	}
+	
+	boolean isPaused()
+	{
+		return false;
+	}
+	
+	float getX()
+	{
+		return machine.getX();
+	}
+	
+	float getY()
+	{
+		return machine.getY();
+	}
+	
+	float getZ()
+	{
+		return machine.getZ();
 	}
 	
 	public static void main(String[] args)
