@@ -54,6 +54,8 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private PanelAxis panelX;
 	private PanelAxis panelY;
 	private PanelAxis panelZ;
+	private JLabel labelSpeed;
+	private JSpinner spinnerSpeed;
 	
 	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader, ManualControl manualControl, MachineState machineState)
 	{
@@ -281,6 +283,8 @@ public class FrameMain extends JFrame implements ConnectionListener
 		initXPanel();
 		initYPanel();
 		initZPanel();
+		initSpeedLabel();
+		initSpeedSpinner();
 		add(panelAxes, BorderLayout.EAST);
 	}
 	
@@ -292,7 +296,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 		panelX.setLeftButtonReleaseListener(() -> manualControl.control(Axis.X, STOP));
 		panelX.setRightButtonPressListener(() -> manualControl.control(Axis.X, MOVE_RIGHT));
 		panelX.setRightButtonReleaseListener(() -> manualControl.control(Axis.X, STOP));
-		panelAxes.add(panelX, new GridBagConstraints(0, 0, 1, 1, 1, 1,
+		panelAxes.add(panelX, new GridBagConstraints(0, 0, 2, 1, 0, 1,
 				GridBagConstraints.SOUTH, GridBagConstraints.HORIZONTAL, new Insets(2, 0, 2, 0),
 				0, 0));
 	}
@@ -305,7 +309,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 		panelY.setLeftButtonReleaseListener(() -> manualControl.control(Axis.Y, STOP));
 		panelY.setRightButtonPressListener(() -> manualControl.control(Axis.Y, MOVE_RIGHT));
 		panelY.setRightButtonReleaseListener(() -> manualControl.control(Axis.Y, STOP));
-		panelAxes.add(panelY, new GridBagConstraints(0, 1, 1, 1, 1, 0,
+		panelAxes.add(panelY, new GridBagConstraints(0, 1, 2, 1, 0, 0,
 				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 0, 2, 0),
 				0, 0));
 	}
@@ -318,8 +322,26 @@ public class FrameMain extends JFrame implements ConnectionListener
 		panelZ.setLeftButtonReleaseListener(() -> manualControl.control(Axis.Z, STOP));
 		panelZ.setRightButtonPressListener(() -> manualControl.control(Axis.Z, MOVE_RIGHT));
 		panelZ.setRightButtonReleaseListener(() -> manualControl.control(Axis.Z, STOP));
-		panelAxes.add(panelZ, new GridBagConstraints(0, 2, 1, 1, 1, 1,
-				GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL, new Insets(2, 0, 2, 0),
+		panelAxes.add(panelZ, new GridBagConstraints(0, 2, 2, 1, 0, 0,
+				GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(2, 0, 2, 0),
+				0, 0));
+	}
+	
+	private void initSpeedLabel()
+	{
+		labelSpeed = new JLabel("Prędkość: ");
+		panelAxes.add(labelSpeed, new GridBagConstraints(0, 3, 1, 1, 1, 0,
+				GridBagConstraints.NORTHEAST, GridBagConstraints.NONE, new Insets(12, 0, 0, 2),
+				0, 0));
+	}
+	
+	private void initSpeedSpinner()
+	{
+		spinnerSpeed = new JSpinner(new SpinnerNumberModel(10, 1, 30, 1));
+		spinnerSpeed.addChangeListener(e -> manualControl.setSpeed((int) spinnerSpeed.getValue()));
+		spinnerSpeed.setPreferredSize(new Dimension(70, spinnerSpeed.getPreferredSize().height));
+		panelAxes.add(spinnerSpeed, new GridBagConstraints(1, 3, 1, 1, 1, 1,
+				GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(8, 0, 0, 0),
 				0, 0));
 	}
 	

@@ -53,6 +53,7 @@ class PanelAxis extends JPanel
 	{
 		label = new JLabel();
 		label.setFont(getFontForLabel());
+		label.setPreferredSize(new Dimension(115, label.getPreferredSize().height));
 		add(label, new GridBagConstraints(2, 0, 1, 1, 1, 0,
 				GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 8, 0, 8),
 				0, 0));
@@ -91,7 +92,7 @@ class PanelAxis extends JPanel
 	
 	void updateAxisValue(Axis axis, float value)
 	{
-		String string = String.format("%s: %.3f", axis.name(), value);
+		String string = String.format("%s: %.2f", axis.name(), value);
 		label.setText(string);
 	}
 }
