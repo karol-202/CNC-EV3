@@ -36,16 +36,9 @@ class Machine
   		this.motorY = new EV3MediumRegulatedMotor(MotorPort.A);
   		this.motorZ = new EV3LargeRegulatedMotor(MotorPort.B);
 	    this.touchSensor = new EV3TouchSensor(SensorPort.S1);
-    	
-		runSafetyThread();
+	    
 	    resetAll();
   	}
-  	
-  	private void runSafetyThread()
-    {
-	    Thread safetyThread = new Thread(new SafetyThread(this));
-	    safetyThread.start();
-    }
   
  	float getX()
  	{

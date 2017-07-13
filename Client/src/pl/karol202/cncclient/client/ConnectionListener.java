@@ -24,5 +24,15 @@ public interface ConnectionListener
 	
 	void onStartingDenied();
 	
+	void onPaused();
+	
+	void onPausingDenied();
+	
+	void onResumed();
+	
+	void onResumingDenied();
+	
+	void onStopped();
+	
 	void onMachineStateUpdated();
 }

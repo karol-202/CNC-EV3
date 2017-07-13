@@ -38,6 +38,21 @@ public class ClientManager
 		executor.execute(() -> client.tryToStart());
 	}
 	
+	public void stop()
+	{
+		executor.execute(() -> client.tryToStop());
+	}
+	
+	public void pause()
+	{
+		executor.execute(() -> client.tryToPause());
+	}
+	
+	public void resume()
+	{
+		executor.execute(() -> client.tryToResume());
+	}
+	
 	public void manualControl(Axis axis, ManualControlAction action, int speed)
 	{
 		executor.execute(() -> client.tryToManualControl(axis, action, speed));

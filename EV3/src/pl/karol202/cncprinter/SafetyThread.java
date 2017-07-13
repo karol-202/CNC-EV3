@@ -4,12 +4,12 @@ import lejos.hardware.sensor.EV3TouchSensor;
 
 class SafetyThread implements Runnable
 {
-	private Machine machine;
+	private Main main;
 	private EV3TouchSensor sensor;
 	
-	SafetyThread(Machine machine)
+	SafetyThread(Main main, Machine machine)
 	{
-		this.machine = machine;
+		this.main = main;
 		this.sensor = machine.getTouchSensor();
 	}
 	
@@ -19,8 +19,7 @@ class SafetyThread implements Runnable
 		while(true)
 		{
 			if(getSample() == 0) continue;
-			machine.closeAll();
-			System.exit(0);
+			main.stop();
 		}
 	}
 	

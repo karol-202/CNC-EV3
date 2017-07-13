@@ -33,6 +33,9 @@ class Client
 	private boolean authenticating;
 	private boolean sending;
 	private boolean starting;
+	private boolean stopping;
+	private boolean pausing;
+	private boolean resuming;
 	
 	void tryToConnect(String ip)
 	{
@@ -68,6 +71,9 @@ class Client
 		authenticating = false;
 		sending = false;
 		starting = false;
+		pausing = false;
+		resuming = false;
+		stopping = false;
 		
 		listen();
 	}
@@ -138,6 +144,9 @@ class Client
 		if(authenticating) onAuthenticated();
 		else if(sending) onSent();
 		else if(starting) onStarted();
+		else if(stopping) onStopped();
+		else if(pausing) onPaused();
+		else if(resuming) onResumed();
 	}
 	
 	private void onAuthenticated()
@@ -159,6 +168,27 @@ class Client
 		System.out.println("Started");
 		if(listener != null) listener.onStarted();
 		starting = false;
+	}
+	
+	private void onStopped()
+	{
+		System.out.println("Stopped");
+		if(listener != null) listener.onStopped();
+		stopping = false;
+	}
+	
+	private void onPaused()
+	{
+		System.out.println("Paused");
+		if(listener != null) listener.onPaused();
+		pausing = false;
+	}
+	
+	private void onResumed()
+	{
+		System.out.println("Resumed");
+		if(listener != null) listener.onResumed();
+		resuming = false;
 	}
 	
 	private void onPasswordRequested() throws IOException
@@ -194,6 +224,8 @@ class Client
 		System.out.println("SERVER: DENIED");
 		if(sending) onSendingDenied();
 		else if(starting) onStartingDenied();
+		else if(pausing) onPausingDenied();
+		else if(resuming) onResumingDenied();
 	}
 	
 	private void onSendingDenied()
@@ -208,6 +240,19 @@ class Client
 		System.err.println("Cannot start");
 		if(listener != null) listener.onStartingDenied();
 		starting = false;
+	}
+	
+	private void onPausingDenied()
+	{
+		System.err.println("Cannot pause");
+		if(listener != null) listener.onPausingDenied();
+		pausing = false;
+	}
+	
+	private void onResumingDenied()
+	{
+		System.err.println("Cannot resume");
+		if(listener != null) listener.onResumingDenied();
 	}
 	
 	private void onMachineStateMessage() throws IOException
@@ -266,6 +311,72 @@ class Client
 		starting = true;
 	}
 	
+	void tryToStop()
+	{
+		try
+		{
+			stop();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			tryToDisconnect();
+			if(listener != null) listener.onConnectionProblem();
+		}
+	}
+	
+	private void stop() throws IOException
+	{
+		if(!checkReady()) return;
+		System.out.println("Stopping");
+		os.write(MESSAGE_STOP);
+		stopping = true;
+	}
+	
+	void tryToPause()
+	{
+		try
+		{
+			pause();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			tryToDisconnect();
+			if(listener != null) listener.onConnectionProblem();
+		}
+	}
+	
+	private void pause() throws IOException
+	{
+		if(!checkReady()) return;
+		System.out.println("Pausing");
+		os.write(MESSAGE_PAUSE);
+		pausing = true;
+	}
+	
+	void tryToResume()
+	{
+		try
+		{
+			resume();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+			tryToDisconnect();
+			if(listener != null) listener.onConnectionProblem();
+		}
+	}
+	
+	private void resume() throws IOException
+	{
+		if(!checkReady()) return;
+		System.out.println("Resuming");
+		os.write(MESSAGE_RESUME);
+		resuming = true;
+	}
+	
 	void tryToManualControl(Axis axis, ManualControlAction action, int speed)
 	{
 		try
@@ -310,7 +421,7 @@ class Client
 	private void runStateCheckLoop(MachineState machineState) throws IOException, InterruptedException
 	{
 		this.machineState = machineState;
-		Thread.sleep(STATE_CHECK_TIME);
+		Thread.sleep(1000);
 		while(!socket.isClosed())
 		{
 			checkState();

@@ -18,6 +18,9 @@ public class Server implements Runnable
 	public static final int MESSAGE_DISCONNECT = 3;
 	public static final int MESSAGE_GCODE = 4;
 	public static final int MESSAGE_START = 5;
+	public static final int MESSAGE_STOP = 6;
+	public static final int MESSAGE_PAUSE = 7;
+	public static final int MESSAGE_RESUME = 8;
 	public static final int MESSAGE_DENIED = 9;
 	public static final int MESSAGE_STATE = 10;
 	public static final int MESSAGE_MANUAL = 11;
@@ -135,6 +138,18 @@ public class Server implements Runnable
 				System.out.println("CLIENT: START");
 				tryToStartProgram();
 				break;
+			case MESSAGE_STOP:
+				System.out.println("CLIENT: STOP");
+				tryToStopProgram();
+				break;
+			case MESSAGE_PAUSE:
+				System.out.println("CLIENT: PAUSE");
+				tryToPauseProgram();
+				break;
+			case MESSAGE_RESUME:
+				System.out.println("CLIENT: RESUME");
+				tryToResumeProgram();
+				break;
 			case MESSAGE_STATE:
 				sendMachineState();
 				break;
@@ -159,6 +174,24 @@ public class Server implements Runnable
 	private void tryToStartProgram() throws IOException
 	{
 		boolean done = main.start();
+		os.write(done ? MESSAGE_OK : MESSAGE_DENIED);
+	}
+	
+	private void tryToStopProgram() throws IOException
+	{
+		main.stop();
+		os.write(MESSAGE_OK);
+	}
+	
+	private void tryToPauseProgram() throws IOException
+	{
+		boolean done = main.setPaused(true);
+		os.write(done ? MESSAGE_OK : MESSAGE_DENIED);
+	}
+	
+	private void tryToResumeProgram() throws IOException
+	{
+		boolean done = main.setPaused(false);
 		os.write(done ? MESSAGE_OK : MESSAGE_DENIED);
 	}
 	

@@ -23,18 +23,19 @@ Stan maszyny:
 1. PC->EV3 10
 2. EV3->PC 10 + STAN MASZYNY
 
-ID | Do serwera            | Do klienta
-01 | OK                    | OK
-02 | -                     | Prośba o hasło
-03 | Rozłączenie           | Rozłączenie
-04 | Przesłanie G-Code     | -
-05 | Start programu        | -
-06 | Stop programu         | -
-07 | Pauza programu        | -
-08 | Wznowienie programu   | -
-09 | -                     | Odmowa
-10 | Żadanie stanu maszyny | Stan maszyny
-11 | Sterowanie ręczne     | -
+ ID | Do serwera            | Do klienta
+----|-----------------------|----------------
+ 01 | -                     | OK
+ 02 | -                     | Prośba o hasło
+ 03 | Rozłączenie           | Rozłączenie
+ 04 | Przesłanie G-Code     | -
+ 05 | Start programu        | -
+ 06 | Stop programu         | -
+ 07 | Pauza programu        | -
+ 08 | Wznowienie programu   | -
+ 09 | -                     | Odmowa
+ 10 | Żadanie stanu maszyny | Stan maszyny
+ 11 | Sterowanie ręczne     | -
 
 STAN MASZYNY:
 1. Wykonywanie programu (boolean)

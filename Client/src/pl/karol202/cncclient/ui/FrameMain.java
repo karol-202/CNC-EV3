@@ -257,7 +257,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 	
 	private void initPauseButton()
 	{
-		buttonPause = new JButton("Wstrzymaj");
+		buttonPause = new JButton();
 		buttonPause.setFocusable(false);
 		buttonPause.addActionListener(e -> pause());
 		panelControl.add(buttonPause, new GridBagConstraints(3, 1, 1, 1, 0, 0,
@@ -350,12 +350,6 @@ public class FrameMain extends JFrame implements ConnectionListener
 		buttonConnection.addActionListener(client.isConnected() ? e -> disconnect() : e -> connect());
 	}
 	
-	private void removeButtonListeners(AbstractButton button)
-	{
-		ActionListener[] listeners = button.getActionListeners();
-		Stream.of(listeners).forEach(button::removeActionListener);
-	}
-	
 	private void updateGCodeStatusLabel()
 	{
 		labelGCodeStatus.setVisible(client.isAuthenticated());
@@ -378,17 +372,24 @@ public class FrameMain extends JFrame implements ConnectionListener
 	
 	private void updateStartButton()
 	{
-		buttonStart.setEnabled(client.isAuthenticated());
+		buttonStart.setEnabled(client.isAuthenticated() && !machineState.isRunning());
 	}
 	
 	private void updatePauseButton()
 	{
-		buttonPause.setEnabled(client.isAuthenticated());
+		buttonPause.setText(machineState.isPaused() ? "Wznów" : "Wstrzymaj");
+		buttonPause.setEnabled(client.isAuthenticated() && machineState.isRunning());
 	}
 	
 	private void updateStopButton()
 	{
 		buttonStop.setEnabled(client.isAuthenticated());
+	}
+	
+	private void removeButtonListeners(AbstractButton button)
+	{
+		ActionListener[] listeners = button.getActionListeners();
+		Stream.of(listeners).forEach(button::removeActionListener);
 	}
 	
 	private void updateAxesPanel()
@@ -483,11 +484,14 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private void pause()
 	{
 		if(!client.isAuthenticated()) return;
+		if(!machineState.isPaused()) client.pause();
+		else client.resume();
 	}
 	
 	private void stop()
 	{
 		if(!client.isAuthenticated()) return;
+		client.stop();
 	}
 	
 	@Override
@@ -561,9 +565,39 @@ public class FrameMain extends JFrame implements ConnectionListener
 	}
 	
 	@Override
+	public void onPaused()
+	{
+		updateControlPanel();
+	}
+	
+	@Override
+	public void onPausingDenied()
+	{
+		JOptionPane.showMessageDialog(this, "Urządzenie odmówiło wstrzymania programu", "Błąd", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	@Override
+	public void onResumed()
+	{
+		updateControlPanel();
+	}
+	
+	@Override
+	public void onResumingDenied()
+	{
+		JOptionPane.showMessageDialog(this, "Urządzenie odmówiło wznowienia programu", "Błąd", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	@Override
+	public void onStopped()
+	{
+		updateControlPanel();
+	}
+	
+	@Override
 	public void onMachineStateUpdated()
 	{
-		updateWorkStatusLabel();
+		updateControlPanel();
 		updateAxesPanel();
 	}
 }

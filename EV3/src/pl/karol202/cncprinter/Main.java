@@ -20,7 +20,7 @@ class Main
 
 	private Machine machine;
 	private ManualControl manualControl;
-	private CodeExecutor reader;
+	private CodeExecutor executor;
 	
 	private Main()
 	{
@@ -30,6 +30,7 @@ class Main
 		machine = new Machine();
 		manualControl = new ManualControl(machine);
 		runServer();
+		runSafetyThread();
 	}
 	
 	private void runServer()
@@ -37,19 +38,37 @@ class Main
 		new Thread(new Server(this)).start();
 	}
 	
+	private void runSafetyThread()
+	{
+		new Thread(new SafetyThread(this, machine)).start();
+	}
+	
 	boolean setGCode(byte[] bytes)
 	{
 		if(isRunning()) return false;
-		reader = new CodeExecutor(machine, bytes);
-		machine.setMachineListener(reader);
+		executor = new CodeExecutor(machine, bytes);
+		machine.setMachineListener(executor);
 		return true;
 	}
 	
 	boolean start()
 	{
-		if(reader == null || reader.isRunning()) return false;
-		new Thread(reader).start();
+		if(executor == null || executor.isRunning()) return false;
+		new Thread(executor).start();
 		return true;
+	}
+	
+	boolean setPaused(boolean paused)
+	{
+		if(!isRunning()) return false;
+		executor.setPaused(paused);
+		return true;
+	}
+	
+	void stop()
+	{
+		if(executor != null) executor.stop();
+		machine.stopAll();
 	}
 	
 	boolean manualControl(Axis axis, ManualControlAction action, int speed)
@@ -61,12 +80,12 @@ class Main
 	
 	boolean isRunning()
 	{
-		return reader != null && reader.isRunning();
+		return executor != null && executor.isRunning();
 	}
 	
 	boolean isPaused()
 	{
-		return false;
+		return executor != null && executor.isPaused();
 	}
 	
 	float getX()

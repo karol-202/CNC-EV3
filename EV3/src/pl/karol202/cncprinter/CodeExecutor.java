@@ -6,6 +6,8 @@ class CodeExecutor implements Runnable, MachineListener
 {
 	private Machine machine;
 	private boolean running;
+	private boolean paused;
+	
 	private String[] lines;
 	private int line;
 	private HashMap<Word, Float> modals;
@@ -16,6 +18,8 @@ class CodeExecutor implements Runnable, MachineListener
 	CodeExecutor(Machine machine, byte[] code)
 	{
 		this.machine = machine;
+		this.running = false;
+		this.paused = false;
 		
 		readLines(code);
 		this.line = 1;
@@ -34,6 +38,7 @@ class CodeExecutor implements Runnable, MachineListener
 	public void run()
 	{
 		running = true;
+		paused = false;
 		machine.floatAll();
 		for(String line : lines) runLine(line);
 		running = false;
@@ -47,11 +52,12 @@ class CodeExecutor implements Runnable, MachineListener
 		String[] words = line.split("\\s+");
 		for(String word : words) parseWord(word);
 		apply();
+		while(paused) Thread.yield();
 	}
 	
 	private void parseWord(String word)
 	{
-		char symbol = word.charAt(0);
+		char symbol = word.charAt(0);//Error
 		Word wordType = Word.getBySymbol(symbol);
 		String valueString = word.substring(1);
 		float value = parseFloat(valueString);
@@ -96,20 +102,35 @@ class CodeExecutor implements Runnable, MachineListener
 		}
 	}
 	
+	void stop()
+	{
+		running = false;
+	}
+	
 	@Override
 	public void onProblemDetected()
 	{
-		running = false;
+		stop();
 	}
 	
 	private void error(String message)
 	{
 		System.err.println("Error at line " + line + ": " + message);
-		onProblemDetected();
+		stop();
 	}
 	
 	boolean isRunning()
 	{
 		return running;
+	}
+	
+	public boolean isPaused()
+	{
+		return paused;
+	}
+	
+	public void setPaused(boolean paused)
+	{
+		this.paused = paused;
 	}
 }
