@@ -57,6 +57,9 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private JLabel labelSpeed;
 	private JSpinner spinnerSpeed;
 	
+	private JPanel panelPreviewContainer;
+	private PanelPreview panelPreview;
+	
 	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader, ManualControl manualControl, MachineState machineState)
 	{
 		super("CNC - Client");
@@ -71,6 +74,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 		initGCodePanel();
 		initControlPanel();
 		initAxesPanel();
+		initPreviewPanelContainer();
 		
 		updateControlPanel();
 		updateAxesPanel();
@@ -78,7 +82,8 @@ public class FrameMain extends JFrame implements ConnectionListener
 	
 	private void setFrameParams()
 	{
-		setSize(800, 600);
+		setMinimumSize(new Dimension(587, 270));
+		setSize(1000, 600);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout());
 		setVisible(true);
@@ -345,6 +350,20 @@ public class FrameMain extends JFrame implements ConnectionListener
 				0, 0));
 	}
 	
+	private void initPreviewPanelContainer()
+	{
+		panelPreviewContainer = new JPanel(new BorderLayout());
+		panelPreviewContainer.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 4));
+		initPreviewPanel();
+		add(panelPreviewContainer, BorderLayout.CENTER);
+	}
+	
+	private void initPreviewPanel()
+	{
+		panelPreview = new PanelPreview(gcode);
+		panelPreviewContainer.add(panelPreview, BorderLayout.CENTER);
+	}
+	
 	private void updateControlPanel()
 	{
 		updateConnectionLabel();
@@ -421,11 +440,18 @@ public class FrameMain extends JFrame implements ConnectionListener
 		panelZ.updateAxisValue(Axis.Z, machineState.getZ());
 	}
 	
+	private void updatePreviewPanel()
+	{
+		panelPreview.repaint();
+	}
+	
 	private void newFile()
 	{
 		gcodeLoader.newFile();
 		listModelGCode.fireAllRemoved();
 		listGCode.clearSelection();
+		
+		onGCodeUpdated();
 	}
 	
 	private void openFile()
@@ -434,7 +460,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 		listModelGCode.fireAllChanged();
 		listGCode.clearSelection();
 		
-		updateControlPanel();
+		onGCodeUpdated();
 	}
 	
 	private void saveFile()
@@ -460,7 +486,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 		listModelGCode.fireLineAdded(position);
 		listGCode.setSelectedIndex(position);
 		
-		updateControlPanel();
+		onGCodeUpdated();
 	}
 	
 	private void removeGCodeLine()
@@ -471,7 +497,13 @@ public class FrameMain extends JFrame implements ConnectionListener
 		gcode.removeLine(selection);
 		listModelGCode.fireLineRemoved(selection);
 		
+		onGCodeUpdated();
+	}
+	
+	private void onGCodeUpdated()
+	{
 		updateControlPanel();
+		updatePreviewPanel();
 	}
 	
 	private void connect()

@@ -1,6 +1,6 @@
 package pl.karol202.cncprinter;
 
-enum Word
+public enum Word
 {
 	MOVEMENT_TYPE('G', true),
 	SPEED('F', true),

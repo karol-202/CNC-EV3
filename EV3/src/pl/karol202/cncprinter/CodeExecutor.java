@@ -9,7 +9,7 @@ class CodeExecutor implements Runnable, MachineListener
 	private boolean paused;
 	
 	private String[] lines;
-	private int line;
+	private int line; //Use line
 	private HashMap<Word, Float> modals;
 	private HashMap<Word, Float> notModals;
 	
@@ -35,7 +35,7 @@ class CodeExecutor implements Runnable, MachineListener
 		lines = code.split("\\r\\n");
 	}
 	
-	public void run()
+	public void run() //Reset
 	{
 		running = true;
 		paused = false;

@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class GCode
 {
@@ -51,6 +52,11 @@ public class GCode
 	public int getLinesAmount()
 	{
 		return lines.size();
+	}
+	
+	Stream<String> getLinesStream()
+	{
+		return lines.stream();
 	}
 	
 	public byte[] toByteArray()
