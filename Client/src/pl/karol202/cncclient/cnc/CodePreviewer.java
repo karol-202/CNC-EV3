@@ -30,10 +30,17 @@ public class CodePreviewer
 		this.error = null;
 	}
 	
-	public List<PreviewPoint> getPoints()
+	public List<PreviewPoint> getAllPoints()
 	{
 		reset();
-		gcode.getLinesStream().forEach(this::parseLine);
+		gcode.getAllLines().forEach(this::parseLine);
+		return previewPoints;
+	}
+	
+	public List<PreviewPoint> getPointsOfLinesBeforeOrAtSelection()
+	{
+		reset();
+		gcode.getLinesBeforeOrAtSelectionStream().forEach(this::parseLine);
 		return previewPoints;
 	}
 	
@@ -120,5 +127,10 @@ public class CodePreviewer
 	private void error(String message)
 	{
 		error = "Błąd w linii " + line + ": " + message;
+	}
+	
+	public String getError()
+	{
+		return error;
 	}
 }

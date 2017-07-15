@@ -12,11 +12,13 @@ import java.util.stream.Stream;
 public class GCode
 {
 	private List<String> lines;
+	private int selection;
 	private boolean upToDate;
 	
 	public GCode()
 	{
 		lines = new ArrayList<>();
+		selection = -1;
 		upToDate = false;
 	}
 	
@@ -54,9 +56,15 @@ public class GCode
 		return lines.size();
 	}
 	
-	Stream<String> getLinesStream()
+	Stream<String> getAllLines()
 	{
 		return lines.stream();
+	}
+	
+	Stream<String> getLinesBeforeOrAtSelectionStream()
+	{
+		if(selection != -1)	return lines.stream().limit(selection + 1);
+		else return lines.stream();
 	}
 	
 	public byte[] toByteArray()
@@ -72,6 +80,11 @@ public class GCode
 		byte[] byteArray = new byte[bytes.size()];
 		for(int i = 0; i < bytes.size(); i++) byteArray[i] = bytes.get(i);
 		return byteArray;
+	}
+
+	public void setSelectionIndex(int selection)
+	{
+		this.selection = selection;
 	}
 	
 	public boolean isUpToDate()

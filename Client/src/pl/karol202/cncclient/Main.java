@@ -1,11 +1,8 @@
 package pl.karol202.cncclient;
 
 import pl.karol202.cncclient.client.ClientManager;
-import pl.karol202.cncclient.cnc.GCode;
-import pl.karol202.cncclient.cnc.MachineState;
-import pl.karol202.cncclient.cnc.ManualControl;
+import pl.karol202.cncclient.cnc.*;
 import pl.karol202.cncclient.ui.FrameMain;
-import pl.karol202.cncclient.cnc.GCodeLoader;
 
 import javax.swing.*;
 
@@ -18,6 +15,7 @@ public class Main
 	private GCodeLoader gcodeLoader;
 	private ManualControl manualControl;
 	private MachineState machineState;
+	private MoveRecorder moveRecorder;
 	
 	private KeyManager keyManager;
 	
@@ -28,6 +26,7 @@ public class Main
 		gcodeLoader = new GCodeLoader(gcode);
 		manualControl = new ManualControl(client);
 		machineState = new MachineState();
+		moveRecorder = new MoveRecorder(machineState);
 		
 		keyManager = new KeyManager();
 		keyManager.addKeyListener(manualControl);
@@ -51,7 +50,7 @@ public class Main
 	private void runMainFrame()
 	{
 		SwingUtilities.invokeLater(() -> {
-			frameMain = new FrameMain(client, gcode, gcodeLoader, manualControl, machineState);
+			frameMain = new FrameMain(client, gcode, gcodeLoader, manualControl, machineState, moveRecorder);
 			client.setConnectionListener(frameMain);
 		});
 	}

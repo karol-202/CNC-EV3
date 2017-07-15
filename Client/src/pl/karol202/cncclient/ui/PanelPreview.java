@@ -1,8 +1,6 @@
 package pl.karol202.cncclient.ui;
 
-import pl.karol202.cncclient.cnc.CodePreviewer;
-import pl.karol202.cncclient.cnc.GCode;
-import pl.karol202.cncclient.cnc.PreviewPoint;
+import pl.karol202.cncclient.cnc.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,21 +11,27 @@ class PanelPreview extends JPanel
 	private static final float MARGIN = 30;
 	
 	private CodePreviewer previewer;
+	private MoveRecorder moveRecorder;
 	
 	private float scale;
 	private int xOffset;
 	private int yOffset;
+	private boolean drawGCodePath;
+	private boolean drawRecordedPath;
 	
 	private Graphics2D graphics;
 	private PreviewPoint previousPoint;
 	
-	PanelPreview(GCode gcode)
+	PanelPreview(GCode gcode, MoveRecorder moveRecorder)
 	{
 		this.previewer = new CodePreviewer(gcode);
+		this.moveRecorder = moveRecorder;
 		
 		this.scale = 1f;
 		this.xOffset = 100;
 		this.yOffset = 100;
+		this.drawGCodePath = true;
+		this.drawRecordedPath = false;
 		
 		setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
 	}
@@ -37,7 +41,8 @@ class PanelPreview extends JPanel
 	{
 		graphics = (Graphics2D) g;
 		drawBackground();
-		drawLines();
+		if(drawGCodePath) drawPathLines();
+		if(drawRecordedPath) drawRecordedLines();
 	}
 	
 	private void drawBackground()
@@ -46,12 +51,24 @@ class PanelPreview extends JPanel
 		graphics.fillRect(0, 0, getWidth(), getHeight());
 	}
 	
-	private void drawLines()
+	private boolean drawPathLines()
 	{
 		previousPoint = null;
 		
-		List<PreviewPoint> points = previewer.getPoints();
-		calculateBounds(points);
+		List<PreviewPoint> allPoints = previewer.getAllPoints();
+		List<PreviewPoint> pointsOfLinesBeforeOrAtSelection = previewer.getPointsOfLinesBeforeOrAtSelection();
+		if(allPoints == null) return false;
+		
+		calculateBounds(allPoints);
+		pointsOfLinesBeforeOrAtSelection.forEach(this::nextPoint);
+		return true;
+	}
+	
+	private void drawRecordedLines()
+	{
+		previousPoint = null;
+		
+		List<RecordedPoint> points = moveRecorder.getRecordedPoints();
 		points.forEach(this::nextPoint);
 	}
 	
@@ -114,5 +131,27 @@ class PanelPreview extends JPanel
 		float x = (point.x * scale) + xOffset;
 		float y = (-point.y * scale) + yOffset;
 		return new Point((int) x, (int) y);
+	}
+	
+	boolean isDrawingGCodePath()
+	{
+		return drawGCodePath;
+	}
+	
+	void setDrawingGCodePath(boolean drawGCodePath)
+	{
+		this.drawGCodePath = drawGCodePath;
+		repaint();
+	}
+	
+	boolean isDrawingRecordedPath()
+	{
+		return drawRecordedPath;
+	}
+	
+	void setDrawingRecordedPath(boolean drawRecordedPath)
+	{
+		this.drawRecordedPath = drawRecordedPath;
+		repaint();
 	}
 }

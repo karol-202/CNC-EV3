@@ -2,10 +2,7 @@ package pl.karol202.cncclient.ui;
 
 import pl.karol202.cncclient.client.ClientManager;
 import pl.karol202.cncclient.client.ConnectionListener;
-import pl.karol202.cncclient.cnc.GCode;
-import pl.karol202.cncclient.cnc.GCodeLoader;
-import pl.karol202.cncclient.cnc.MachineState;
-import pl.karol202.cncclient.cnc.ManualControl;
+import pl.karol202.cncclient.cnc.*;
 import pl.karol202.cncprinter.Axis;
 
 import javax.swing.*;
@@ -25,6 +22,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private GCodeLoader gcodeLoader;
 	private ManualControl manualControl;
 	private MachineState machineState;
+	private MoveRecorder moveRecorder;
 	
 	private JMenuBar menuBar;
 	private JMenu menuFile;
@@ -57,10 +55,13 @@ public class FrameMain extends JFrame implements ConnectionListener
 	private JLabel labelSpeed;
 	private JSpinner spinnerSpeed;
 	
-	private JPanel panelPreviewContainer;
+	private JPanel panelCentral;
 	private PanelPreview panelPreview;
+	private JCheckBox checkBoxGCodePath;
+	private JCheckBox checkBoxRecordedPath;
+	private JButton buttonRecordedPathClear;
 	
-	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader, ManualControl manualControl, MachineState machineState)
+	public FrameMain(ClientManager client, GCode gcode, GCodeLoader gcodeLoader, ManualControl manualControl, MachineState machineState, MoveRecorder moveRecorder)
 	{
 		super("CNC - Client");
 		this.client = client;
@@ -68,13 +69,14 @@ public class FrameMain extends JFrame implements ConnectionListener
 		this.gcodeLoader = gcodeLoader;
 		this.manualControl = manualControl;
 		this.machineState = machineState;
+		this.moveRecorder = moveRecorder;
 		
 		setFrameParams();
 		initMenuBar();
 		initGCodePanel();
 		initControlPanel();
 		initAxesPanel();
-		initPreviewPanelContainer();
+		initCentralPanel();
 		
 		updateControlPanel();
 		updateAxesPanel();
@@ -159,6 +161,7 @@ public class FrameMain extends JFrame implements ConnectionListener
 		listGCode = new JList<>(listModelGCode);
 		listGCode.setLayoutOrientation(VERTICAL);
 		listGCode.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		listGCode.addListSelectionListener(e -> onGCodeSelectionUpdated());
 		listGCode.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e)
@@ -350,18 +353,52 @@ public class FrameMain extends JFrame implements ConnectionListener
 				0, 0));
 	}
 	
-	private void initPreviewPanelContainer()
+	private void initCentralPanel()
 	{
-		panelPreviewContainer = new JPanel(new BorderLayout());
-		panelPreviewContainer.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 4));
+		panelCentral = new JPanel(new GridBagLayout());
+		panelCentral.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 4));
 		initPreviewPanel();
-		add(panelPreviewContainer, BorderLayout.CENTER);
+		initGCodePathDrawCheckBox();
+		initRecordedPathDrawCheckBox();
+		initRecordedPathClearButton();
+		add(panelCentral, BorderLayout.CENTER);
 	}
 	
 	private void initPreviewPanel()
 	{
-		panelPreview = new PanelPreview(gcode);
-		panelPreviewContainer.add(panelPreview, BorderLayout.CENTER);
+		panelPreview = new PanelPreview(gcode, moveRecorder);
+		panelCentral.add(panelPreview, new GridBagConstraints(0, 0, 3, 1, 1, 1,
+				GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(0, 0, 1, 0),
+				0, 0));
+	}
+	
+	private void initGCodePathDrawCheckBox()
+	{
+		checkBoxGCodePath = new JCheckBox("Ścieżka z kodu");
+		checkBoxGCodePath.setSelected(panelPreview.isDrawingGCodePath());
+		checkBoxGCodePath.addActionListener(e -> panelPreview.setDrawingGCodePath(checkBoxGCodePath.isSelected()));
+		panelCentral.add(checkBoxGCodePath, new GridBagConstraints(0, 1, 1, 1, 0, 0,
+				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0),
+				0, 0));
+	}
+	
+	private void initRecordedPathDrawCheckBox()
+	{
+		checkBoxRecordedPath = new JCheckBox("Ścieżka zarejestrowana");
+		checkBoxRecordedPath.setSelected(panelPreview.isDrawingRecordedPath());
+		checkBoxRecordedPath.addActionListener(e -> toggleRecordedPathDrawing());
+		panelCentral.add(checkBoxRecordedPath, new GridBagConstraints(1, 1, 1, 1, 0, 0,
+				GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0),
+				0, 0));
+	}
+	
+	private void initRecordedPathClearButton()
+	{
+		buttonRecordedPathClear = new JButton("Usuń ścieżkę");
+		buttonRecordedPathClear.addActionListener(e -> clearRecordedPath());
+		panelCentral.add(buttonRecordedPathClear, new GridBagConstraints(2, 1, 1, 1, 0, 0,
+				GridBagConstraints.WEST, GridBagConstraints.VERTICAL, new Insets(0, 0, 0, 0),
+				0, 0));
 	}
 	
 	private void updateControlPanel()
@@ -506,6 +543,12 @@ public class FrameMain extends JFrame implements ConnectionListener
 		updatePreviewPanel();
 	}
 	
+	private void onGCodeSelectionUpdated()
+	{
+		gcode.setSelectionIndex(listGCode.getSelectedIndex());
+		updatePreviewPanel();
+	}
+	
 	private void connect()
 	{
 		if(client.isConnected()) return;
@@ -546,6 +589,19 @@ public class FrameMain extends JFrame implements ConnectionListener
 	{
 		if(!client.isAuthenticated()) return;
 		client.stop();
+	}
+	
+	private void toggleRecordedPathDrawing()
+	{
+		boolean enable = checkBoxRecordedPath.isSelected();
+		panelPreview.setDrawingRecordedPath(enable);
+		buttonRecordedPathClear.setEnabled(enable);
+	}
+	
+	private void clearRecordedPath()
+	{
+		moveRecorder.clear();
+		updatePreviewPanel();
 	}
 	
 	@Override
@@ -651,7 +707,10 @@ public class FrameMain extends JFrame implements ConnectionListener
 	@Override
 	public void onMachineStateUpdated()
 	{
+		moveRecorder.recordPoint();
+		
 		updateControlPanel();
 		updateAxesPanel();
+		updatePreviewPanel();
 	}
 }
